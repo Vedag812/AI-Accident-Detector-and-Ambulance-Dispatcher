@@ -1,66 +1,575 @@
-# 🚨 Accident Alert System with Google Maps Integrationcompile-and-run.bat# AI-Assisted Accident Detection & Ambulance Simulator - Enhanced Edition
+# � AI Accident Detector & Ambulance Dispatcher
 
+A comprehensive real-time accident detection and intelligent ambulance dispatch system with dual-map visualization (Swing + Google Maps), built with Java, MySQL, and modern web technologies.
 
+---
 
-## 📋 Table of Contents## 🚀 Features Implemented
+## 📋 Table of Contents
 
-1. [Overview](#overview)
+1. [Overview](#-overview)
+2. [Key Features](#-key-features)
+3. [Prerequisites](#-prerequisites)
+4. [Quick Start](#-quick-start)
+5. [Configuration](#-configuration)
+6. [Database Setup](#-database-setup)
+7. [Running the Application](#-running-the-application)
+8. [Project Structure](#-project-structure)
+9. [Troubleshooting](#-troubleshooting)
+10. [Technical Details](#-technical-details)
 
-2. [Quick Start](#quick-start)### 1. Real-Time Traffic & Route Optimization ✅
+---
 
-3. [Features](#features)- Dynamic traffic density simulation
+## 🎯 Overview## 🎯 Overview
 
-4. [Complete Setup Guide](#complete-setup-guide)- A* pathfinding algorithm for optimal routes
+An advanced emergency response system that combines intelligent accident detection, real-time ambulance dispatch, and synchronized dual-map visualization. The system automatically creates database tables, dispatches the nearest available ambulance using Haversine distance calculations, and provides live tracking across both desktop (Swing) and web (Google Maps) interfaces.
 
-5. [Database Setup](#database-setup)- ETA calculations based on traffic and weather
+**Built for:** Advanced Object-Oriented Programming Project  
+**Tech Stack:** Java 17+, MySQL 8.0, Swing GUI, Google Maps JavaScript API  
+**Key Innovation:** Bi-directional synchronization between Swing UI ↔ Database ↔ Google Maps
 
-6. [Running the Application](#running-the-application)- Traffic heatmap visualization
+---
 
-7. [Google Maps Integration](#google-maps-integration)- Multiple route options with distance calculations
+## ✨ Key Features
 
-8. [User Guide](#user-guide)
+### 🚨 Intelligent Accident Management
+- **Real-time accident reporting** with location, severity, and vehicle details
+- **AI-based severity prediction** from accident descriptions
+- **Automatic ambulance dispatch** using Haversine distance algorithm
+- **Multi-stage ambulance tracking**: Available → Responding → At Accident → To Hospital → Completed
 
-9. [Troubleshooting](#troubleshooting)### 2. Communication System ✅
+### 🗺️ Dual-Map Visualization
+- **Swing MapPanel**: Desktop map with smooth 50ms animation updates
+- **Google Maps Integration**: Web-based interactive map with 5-second auto-refresh
+- **Professional SVG markers**: Custom icons for ambulances, hospitals, and accidents
+- **Route visualization**: Green polylines (to accident), Red polylines (to hospital)
+- **Real-time synchronization**: Both maps stay perfectly in sync
 
-10. [Technical Details](#technical-details)- Real-time messaging between dispatchers, ambulances, and hospitals
+### 🚑 Smart Ambulance Dispatch
+- **Fleet of 10 ambulances** with unique vehicle numbers and drivers
+- **Intelligent dispatch algorithm**: Finds nearest available ambulance
+- **Live GPS tracking**: Real-time position updates
+- **State management**: Thread-safe ConcurrentHashMap for concurrent updates
+- **Centralized sync manager**: AmbulanceMovementSync.java coordinates all movements
 
-- Priority-based messaging (Normal, High, Critical)
+### 🏥 Hospital Management
+- **5 Chennai hospitals** pre-loaded with coordinates
+- **Bed availability tracking**: Real-time capacity monitoring
+- **Equipment inventory**: Surgical rooms, medical equipment
+- **Staff management**: Doctor and nurse assignments
 
----- Message history with read/unread status
+### 🔄 Auto-Database Initialization
+- **Zero manual setup**: Tables created automatically on first run
+- **10 complete tables**: users, accidents, hospitals, ambulances, messages, audit_logs, etc.
+- **Sample data included**: 10 ambulances, 5 hospitals, admin user
+- **Fallback option**: CREATE_ALL_TABLES.sql for manual setup
 
-- Auto-refresh message feed
+### 🌤️ Weather Integration
+- **Simulated weather conditions**: Clear, Rain, Fog, Storm
+- **Speed impact calculations**: Ambulances slow down in bad weather
+- **Optional API integration**: OpenWeatherMap support ready
 
-## 🎯 Overview- Toast notifications for new messages
+### 📊 Analytics & Reporting
+- **Real-time dashboard**: Live statistics and metrics
+- **Visual charts**: Severity distribution, status tracking
+- **Response time analysis**: Average ETA calculations
+- **CSV export**: Download accident reports
 
+### 🔐 Security & Authentication
+- **Role-based access control**: Admin, Dispatcher, Hospital Staff, Viewer
+- **Secure login system**: Username/password authentication
+- **Audit logging**: All actions tracked with timestamps
+- **Session management**: Multi-user support
 
+---
 
-A comprehensive **Accident Detection & Ambulance Management System** with real-time Google Maps integration, built with Java Swing and MySQL.### 3. Enhanced Hospital Management ✅
+## 📋 Prerequisites
 
-- Bed availability tracking and management
+Before you begin, ensure you have the following installed:
 
-### Key Highlights:- Surgery room status monitoring
+1. **Java Development Kit (JDK) 17 or higher**
+   - Download: https://www.oracle.com/java/technologies/downloads/
+   - Verify: `java -version` and `javac -version`
 
-- ✅ Real-time accident reporting and tracking- Equipment inventory management
+2. **MySQL Server 8.0 or higher**
+   - Download: https://dev.mysql.com/downloads/mysql/
+   - Verify: `mysql --version`
 
-- ✅ Intelligent ambulance dispatch system- Staff availability tracking
+3. **MySQL Connector/J (JDBC Driver)**
+   - Already included in `lib/mysql-connector-j-9.4.0.jar`
+   - Alternative: Download from https://dev.mysql.com/downloads/connector/j/
 
-- ✅ **Google Maps integration** with color-coded markers- Resource allocation system
+4. **Google Maps API Key (Optional)**
+   - For full Google Maps features
+   - Get from: https://console.cloud.google.com/google/maps-apis
 
-- ✅ Hospital management with bed availability
+5. **OpenWeatherMap API Key (Optional)**
+   - For real weather data
+   - Get from: https://openweathermap.org/api
 
-- ✅ Weather-aware routing### 4. Analytics & Reporting ✅
+---
 
-- ✅ Traffic optimization- Real-time statistics dashboard
+## 🚀 Quick Start
 
-- ✅ Communication center for messaging- Severity distribution pie charts
+### Option 1: One-Click Launch (Recommended)
 
-- ✅ Analytics dashboard with charts- Status distribution bar charts
+```powershell
+# Double-click this file in Windows Explorer
+RUN-WITH-GOOGLE-MAPS.bat
+```
 
-- ✅ User authentication and role-based access- Hospital bed availability charts
+**Login Credentials:**
+- Username: `admin`
+- Password: `admin123`
 
-- Response time analysis
+That's it! The application will compile and launch automatically.
 
----- Export to CSV functionality
+### Option 2: Manual PowerShell
+
+```powershell
+# Navigate to project directory
+cd "c:\Users\VEDANT\Downloads\AOOP PROJECT\TestJdbc"
+
+# Compile
+.\compile.bat
+
+# Run
+.\run.bat
+```
+
+---
+
+## ⚙️ Configuration
+
+Edit `config.properties` before first run:
+
+```properties
+# Database Configuration (REQUIRED)
+db.url=jdbc:mysql://localhost:3306/accident_alert_system?useSSL=false&serverTimezone=UTC
+db.user=root
+db.password=YOUR_MYSQL_PASSWORD
+
+# Google Maps API (OPTIONAL - for full map features)
+google.maps.api.key=YOUR_GOOGLE_MAPS_API_KEY
+
+# Weather API (OPTIONAL - simulated weather used by default)
+weather.api.key=YOUR_OPENWEATHER_API_KEY
+weather.api.url=https://api.openweathermap.org/data/2.5/weather
+
+# Application Settings
+app.ai.interval=20
+app.default.latitude=13.0827
+app.default.longitude=80.2707
+app.default.city=Chennai
+notification.sound.enabled=true
+notification.toast.enabled=true
+```
+
+**⚠️ Security Note:** Never commit API keys or passwords to version control!
+
+---
+
+## 🗄️ Database Setup
+
+### Automatic Setup (Recommended)
+
+The application automatically creates all required tables on first run via `DatabaseManager.initializeDatabase()`. Just ensure:
+
+1. MySQL Server is running
+2. `config.properties` has correct credentials
+3. User has CREATE TABLE privileges
+
+### Manual Setup (Fallback)
+
+If automatic setup fails, run the SQL script manually:
+
+```powershell
+# Option 1: Command line
+mysql -u root -p < CREATE_ALL_TABLES.sql
+
+# Option 2: MySQL Workbench
+# Open CREATE_ALL_TABLES.sql and execute
+```
+
+### Database Schema
+
+The system creates 10 tables:
+
+| Table | Purpose |
+|-------|---------|
+| `users` | Authentication and user management |
+| `accidents` | Accident records and tracking |
+| `hospitals` | Hospital information and bed availability |
+| `ambulances` | Ambulance fleet and GPS tracking |
+| `hospital_staff` | Medical personnel assignments |
+| `equipment_inventory` | Hospital equipment tracking |
+| `ambulance_requests` | Dispatch request history |
+| `audit_logs` | Security and action logging |
+| `messages` | Communication system |
+| `surgery_rooms` | Operating room availability |
+
+### Sample Data Included
+
+- **10 Ambulances**: TN01-AB-1234 through TN01-ST-7531
+- **5 Hospitals**: Apollo, Fortis Malar, MIOT, Sri Ramachandra, Gleneagles
+- **1 Admin User**: admin/admin123
+
+---
+
+## ▶️ Running the Application
+
+### Windows (PowerShell)
+
+```powershell
+# Method 1: Batch file (easiest)
+.\RUN-WITH-GOOGLE-MAPS.bat
+
+# Method 2: Separate compile and run
+.\compile.bat
+.\run.bat
+
+# Method 3: PowerShell script
+.\run.ps1
+
+# Method 4: Manual commands
+javac -cp ".;lib\mysql-connector-j-9.4.0.jar" -d bin src\*.java
+java -cp ".;bin;lib\mysql-connector-j-9.4.0.jar" Main
+```
+
+### IntelliJ IDEA
+
+1. Open IntelliJ IDEA
+2. File → Open → Select `TestJdbc` folder
+3. File → Project Structure → Libraries → Add `lib/mysql-connector-j-9.4.0.jar`
+4. Right-click `Main.java` → Run 'Main.main()'
+
+### VS Code
+
+1. Install "Extension Pack for Java"
+2. Open `TestJdbc` folder
+3. Add to `.vscode/settings.json`:
+```json
+{
+    "java.project.sourcePaths": ["src"],
+    "java.project.outputPath": "bin",
+    "java.project.referencedLibraries": ["lib/**/*.jar"]
+}
+```
+4. Open `Main.java` and press F5
+
+---
+
+## 📁 Project Structure
+
+```
+TestJdbc/
+├── src/                                    # Java source files
+│   ├── Main.java                          # Entry point, main window
+│   ├── DatabaseManager.java               # DB operations, auto-table creation
+│   ├── AmbulanceMovementSync.java         # Central sync manager
+│   ├── GoogleMapsPanel.java               # Web map generation
+│   ├── RouteOptimizer.java                # Pathfinding algorithms
+│   ├── WeatherService.java                # Weather simulation/API
+│   ├── NotificationManager.java           # Toast notifications
+│   ├── CommunicationPanel.java            # Messaging system
+│   ├── LoginDialog.java                   # Authentication UI
+│   └── ConfigManager.java                 # Config file handler
+├── lib/                                    # External libraries
+│   └── mysql-connector-j-9.4.0.jar        # MySQL JDBC driver
+├── bin/                                    # Compiled .class files (generated)
+├── config.properties                       # Runtime configuration
+├── CREATE_ALL_TABLES.sql                   # Database schema (backup)
+├── compile.bat                             # Compilation script
+├── run.bat                                 # Run script
+├── run.ps1                                 # PowerShell runner
+├── RUN-WITH-GOOGLE-MAPS.bat               # One-click launcher
+└── README.md                               # This file
+```
+
+### Key Source Files
+
+| File | Responsibility |
+|------|----------------|
+| `Main.java` | Application entry, Swing UI, MapPanel inner class |
+| `DatabaseManager.java` | JDBC connections, table creation, CRUD operations |
+| `AmbulanceMovementSync.java` | Thread-safe state management, sync coordinator |
+| `GoogleMapsPanel.java` | HTML/JavaScript generation, marker creation, auto-refresh |
+| `RouteOptimizer.java` | Haversine distance, A* pathfinding, traffic simulation |
+| `WeatherService.java` | Weather conditions, speed impact calculations |
+| `ConfigManager.java` | Properties file loading, singleton pattern |
+
+---
+
+## 🐛 Troubleshooting
+
+### ❌ "Table 'users' doesn't exist"
+
+**Cause:** Auto-table creation failed or insufficient DB privileges  
+**Solution:**
+
+```powershell
+# Run manual table creation
+mysql -u root -p < CREATE_ALL_TABLES.sql
+
+# Or create users table specifically
+mysql -u root -p accident_alert_system -e "
+CREATE TABLE IF NOT EXISTS users (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(50) UNIQUE NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    role ENUM('ADMIN', 'DISPATCHER', 'HOSPITAL_STAFF', 'VIEWER') DEFAULT 'VIEWER',
+    full_name VARCHAR(100),
+    email VARCHAR(100),
+    phone VARCHAR(20),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+INSERT INTO users (username, password, role, full_name, email) 
+VALUES ('admin', 'admin123', 'ADMIN', 'System Administrator', 'admin@system.com')
+ON DUPLICATE KEY UPDATE username=username;"
+```
+
+### ❌ "Cannot connect to database"
+
+**Cause:** MySQL not running or incorrect credentials  
+**Solution:**
+
+```powershell
+# Start MySQL service
+net start MySQL80
+
+# Test connection
+mysql -u root -p -e "SELECT 1;"
+
+# Verify database exists
+mysql -u root -p -e "SHOW DATABASES;" | findstr accident_alert_system
+
+# Create database if missing
+mysql -u root -p -e "CREATE DATABASE IF NOT EXISTS accident_alert_system;"
+```
+
+### ❌ "ClassNotFoundException: com.mysql.cj.jdbc.Driver"
+
+**Cause:** JDBC driver not in classpath  
+**Solution:**
+
+```powershell
+# Verify jar file exists
+ls lib\mysql-connector-j-9.4.0.jar
+
+# Recompile with correct classpath
+javac -cp ".;lib\mysql-connector-j-9.4.0.jar" -d bin src\*.java
+
+# For IntelliJ: File → Project Structure → Libraries → Add JAR
+# For VS Code: Update .vscode/settings.json referencedLibraries
+```
+
+### ❌ Google Maps not showing / blank
+
+**Cause:** Missing or invalid API key  
+**Solution:**
+
+1. Check `config.properties` has `google.maps.api.key`
+2. Verify API key has "Maps JavaScript API" enabled
+3. Check billing is enabled on Google Cloud Console
+4. Look for JavaScript errors in embedded browser console
+
+### ❌ Compilation errors
+
+**Cause:** Java version mismatch or corrupted class files  
+**Solution:**
+
+```powershell
+# Clean all class files
+Remove-Item *.class -Recurse -ErrorAction SilentlyContinue
+Remove-Item bin\*.class -Recurse -ErrorAction SilentlyContinue
+
+# Verify Java version (must be 17+)
+java -version
+
+# Recompile with UTF-8 encoding
+javac -encoding UTF-8 -cp ".;lib\mysql-connector-j-9.4.0.jar" -d bin src\*.java
+```
+
+### ❌ Login failed
+
+**Cause:** Admin user not created or password incorrect  
+**Solution:**
+
+```powershell
+# Reset admin password
+mysql -u root -p accident_alert_system -e "
+UPDATE users SET password='admin123' WHERE username='admin';"
+
+# Verify admin exists
+mysql -u root -p accident_alert_system -e "
+SELECT username, password, role FROM users WHERE username='admin';"
+```
+
+---
+
+## 🔬 Technical Details
+
+### Architecture Pattern
+
+```
+┌─────────────────────────────────────────┐
+│     Presentation Layer (Swing GUI)      │
+│   Main.java, GoogleMapsPanel.java      │
+└─────────────────────────────────────────┘
+                    ↓
+┌─────────────────────────────────────────┐
+│        Business Logic Layer             │
+│  AmbulanceMovementSync, RouteOptimizer  │
+│  WeatherService, NotificationManager    │
+└─────────────────────────────────────────┘
+                    ↓
+┌─────────────────────────────────────────┐
+│      Data Access Layer (JDBC)           │
+│   DatabaseManager, ConfigManager        │
+└─────────────────────────────────────────┘
+                    ↓
+┌─────────────────────────────────────────┐
+│        MySQL Database (10 tables)       │
+│      accident_alert_system DB           │
+└─────────────────────────────────────────┘
+```
+
+### Design Patterns Used
+
+- **Singleton**: DatabaseManager, ConfigManager, WeatherService, NotificationManager
+- **Observer**: Event listeners for UI updates and state changes
+- **MVC**: Clear separation of Model (DB), View (Swing/Maps), Controller (Sync Manager)
+- **Factory**: Dialog and panel creation
+- **Strategy**: Different routing algorithms
+
+### Key Algorithms
+
+1. **Haversine Distance Formula**: Calculate great-circle distance between GPS coordinates
+2. **A* Pathfinding**: Optimal route finding with traffic weights
+3. **Intelligent Dispatch**: Multi-criteria ambulance selection (distance, availability, hospital capacity)
+4. **Thread-Safe State Management**: ConcurrentHashMap for real-time position updates
+
+### Performance Optimizations
+
+- **Connection pooling**: Reuse database connections
+- **Lazy loading**: Components loaded on-demand
+- **Efficient queries**: PreparedStatements prevent SQL injection and improve performance
+- **Configuration caching**: Config file read once at startup
+- **Asynchronous operations**: Map generation doesn't block UI
+
+### Synchronization System
+
+```java
+AmbulanceMovementSync (Centralized Manager)
+    ├── ConcurrentHashMap<Integer, AmbulanceState>
+    ├── updateAmbulancePosition() → Swing MapPanel
+    ├── syncToDatabase() → MySQL (every 2 seconds)
+    └── syncToGoogleMaps() → Web view (every 5 seconds)
+```
+
+### Update Intervals
+
+- **Swing MapPanel animation**: 50ms (smooth movement)
+- **Database synchronization**: 2 seconds
+- **Google Maps auto-refresh**: 5 seconds
+- **Weather updates**: 5 minutes (configurable)
+
+---
+
+## 🎯 Default Login Credentials
+
+- **Username:** `admin`
+- **Password:** `admin123`
+- **Role:** Administrator
+
+---
+
+## 📊 System Requirements
+
+### Minimum
+
+- **OS**: Windows 10, macOS 10.15, or Ubuntu 20.04
+- **RAM**: 4 GB
+- **Storage**: 500 MB
+- **Java**: JDK 17
+- **MySQL**: 8.0
+- **Browser**: Chrome, Firefox, or Edge
+
+### Recommended
+
+- **OS**: Windows 11, macOS 12+, or Ubuntu 22.04
+- **RAM**: 8 GB
+- **Storage**: 1 GB
+- **Java**: JDK 21
+- **MySQL**: 8.0.35+
+- **Browser**: Latest Chrome or Edge
+
+---
+
+## 🔐 Security Notes
+
+1. **Change default passwords** in production
+2. **Implement password hashing** (currently plain text for demo)
+3. **Use environment variables** for sensitive config
+4. **Enable SSL/TLS** for database connections
+5. **Never commit** `config.properties` with real credentials
+6. **PreparedStatements** used throughout to prevent SQL injection
+7. **Audit logging** tracks all critical actions
+
+---
+
+## 🚀 Future Enhancements
+
+1. **IoT Integration**: Smart sensors in ambulances for real-time vitals
+2. **AI/ML Predictive Analytics**: Accident hotspot prediction
+3. **Mobile App**: iOS/Android companion apps
+4. **Multi-Agency Coordination**: Police and fire department integration
+5. **Voice Assistants**: Alexa/Google Assistant accident reporting
+6. **Hospital Bed API**: Live bed availability from hospital systems
+7. **Traffic Signal Prioritization**: Green lights for ambulances
+8. **Patient Pre-Registration**: Auto-notify hospitals with patient details
+
+---
+
+## 📝 License
+
+This project is for educational purposes as part of an Advanced Object-Oriented Programming course.
+
+---
+
+## 🙏 Acknowledgments
+
+- **Java Swing** for desktop GUI framework
+- **MySQL** for reliable database management
+- **Google Maps JavaScript API** for interactive mapping
+- **OpenWeatherMap** for weather data (optional integration)
+
+---
+
+## 🏆 Credits
+
+**Project:** Advanced Object-Oriented Programming (AOOP)  
+**Technologies:** Java 17, MySQL 8.0, Swing, Google Maps API  
+**Version:** 2.0 with Real-Time Synchronization  
+**Date:** November 2025
+
+---
+
+## 📞 Support
+
+For issues or questions:
+
+1. Check the [Troubleshooting](#-troubleshooting) section
+2. Review console logs for error messages
+3. Verify all [Prerequisites](#-prerequisites) are installed
+4. Ensure `config.properties` is correctly configured
+5. Confirm all database tables exist
+
+---
+
+**🎉 Enjoy using the AI Accident Detector & Ambulance Dispatcher! 🚑**
+
+*This system demonstrates advanced OOP principles including inheritance, polymorphism, encapsulation, abstraction, singleton pattern, MVC architecture, and thread-safe concurrent programming.*
+
 
 
 
