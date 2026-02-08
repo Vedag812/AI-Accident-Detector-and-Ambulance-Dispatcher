@@ -27,3 +27,9 @@ bin/
 
 ### Mac OS ###
 .DS_Store
+
+### Project Specific ###
+config.properties
+src/config.properties
+bin/
+*.class

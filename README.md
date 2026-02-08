@@ -843,7 +843,7 @@ db.url=jdbc:mysql://localhost:3306/accident_alert_system1. Install Extension Pac
 
 db.user=root2. Install MySQL extension (optional)
 
-db.password=Vedant@0393. Open project folder in VS Code
+db.password=YOUR_DATABASE_PASSWORD_HERE
 
 
 
@@ -891,13 +891,13 @@ mysql -u root -pVedant@039 -e "CREATE DATABASE IF NOT EXISTS accident_alert_syst
 
 # Create users tablecd "c:\Users\VEDANT\Downloads\AOOP PROJECT\TestJdbc"
 
-mysql -u root -pVedant@039 accident_alert_system -e "CREATE TABLE IF NOT EXISTS users (id INT AUTO_INCREMENT PRIMARY KEY, username VARCHAR(50) UNIQUE NOT NULL, password VARCHAR(255) NOT NULL, role ENUM('ADMIN', 'DISPATCHER', 'HOSPITAL_STAFF', 'VIEWER') DEFAULT 'VIEWER', full_name VARCHAR(100), email VARCHAR(100), phone VARCHAR(20), created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);"
+mysql -u root -pYOUR_PASSWORD accident_alert_system -e "CREATE TABLE IF NOT EXISTS users (id INT AUTO_INCREMENT PRIMARY KEY, username VARCHAR(50) UNIQUE NOT NULL, password VARCHAR(255) NOT NULL, role ENUM('ADMIN', 'DISPATCHER', 'HOSPITAL_STAFF', 'VIEWER') DEFAULT 'VIEWER', full_name VARCHAR(100), email VARCHAR(100), phone VARCHAR(20), created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);"
 
 # Compile (with JDBC driver in classpath)
 
 # Insert admin userjavac -cp ".;lib\mysql-connector-j-8.2.0.jar" -d bin src\*.java
 
-mysql -u root -pVedant@039 accident_alert_system -e "INSERT INTO users (username, password, role, full_name, email) VALUES ('admin', 'admin123', 'ADMIN', 'System Administrator', 'admin@system.com') ON DUPLICATE KEY UPDATE username=username;"
+mysql -u root -pYOUR_PASSWORD accident_alert_system -e "INSERT INTO users (username, password, role, full_name, email) VALUES ('admin', 'admin123', 'ADMIN', 'System Administrator', 'admin@system.com') ON DUPLICATE KEY UPDATE username=username;"
 
 # Run
 
