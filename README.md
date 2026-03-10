@@ -2,7 +2,7 @@
 
 A desktop application for managing accident response in a city. Reports an accident, finds the nearest hospital with available beds, dispatches the closest ambulance, and tracks everything on a live Google Maps view.
 
-Built this as a college project (AOOP course) but went way beyond the requirements - added real Google Maps integration, weather-aware routing, analytics dashboards, and a full communication system between dispatchers and hospitals.
+Built this as a college project  but went way beyond the requirements - added real Google Maps integration, weather-aware routing, analytics dashboards, and a full communication system between dispatchers and hospitals.
 
 ## How it works
 
@@ -82,3 +82,4 @@ Or use the one-click launcher: `RUN-WITH-GOOGLE-MAPS.bat`
 - Add actual accident detection from CCTV feeds using a YOLO model
 - Push notifications via SMS/WhatsApp instead of just desktop
 - Containerize the whole thing with Docker for easier deployment
+
