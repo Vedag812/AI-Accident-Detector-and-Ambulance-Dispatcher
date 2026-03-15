@@ -4,7 +4,7 @@ import java.awt.*;
 import java.awt.geom.*;
 
 /**
- * 🚨 EMERGENCY RESPONSE UI THEME 🚨
+ * EMERGENCY RESPONSE UI THEME
  * Premium Design System for AI Accident Detection & Ambulance Dispatch
  * 
  * A stunning, modern interface with:
@@ -22,17 +22,17 @@ public class UITheme {
     // 🎨 EMERGENCY RESPONSE COLOR PALETTE - Stunning & Professional
     // ═══════════════════════════════════════════════════════════════════════════
 
-    /** Deep midnight background - premium dark */
-    public static final Color DARK_BG = new Color(10, 12, 16);
+    /** Main background - clean white */
+    public static final Color DARK_BG = new Color(245, 247, 250);
 
-    /** Card background with depth */
-    public static final Color CARD_BG = new Color(17, 20, 26);
+    /** Card background - white */
+    public static final Color CARD_BG = new Color(255, 255, 255);
 
     /** Elevated panel background */
-    public static final Color PANEL_BG = new Color(24, 28, 36);
+    public static final Color PANEL_BG = new Color(248, 249, 252);
 
     /** Surface elevation */
-    public static final Color SURFACE_BG = new Color(32, 37, 48);
+    public static final Color SURFACE_BG = new Color(241, 243, 248);
 
     /** Premium gradient start - electric blue */
     public static final Color GRADIENT_START = new Color(59, 130, 246);
@@ -40,95 +40,95 @@ public class UITheme {
     /** Premium gradient end - purple */
     public static final Color GRADIENT_END = new Color(147, 51, 234);
 
-    /** Primary accent - vibrant cyan */
-    public static final Color ACCENT = new Color(6, 182, 212);
+    /** Primary accent - vibrant blue */
+    public static final Color ACCENT = new Color(37, 99, 235);
 
-    /** Accent hover - bright cyan */
-    public static final Color ACCENT_HOVER = new Color(34, 211, 238);
+    /** Accent hover */
+    public static final Color ACCENT_HOVER = new Color(29, 78, 216);
 
     /** Accent glow effect */
-    public static final Color ACCENT_GLOW = new Color(6, 182, 212, 80);
+    public static final Color ACCENT_GLOW = new Color(37, 99, 235, 30);
 
     /** Purple accent - for special actions */
-    public static final Color ACCENT_PURPLE = new Color(139, 92, 246);
-    public static final Color ACCENT_PURPLE_GLOW = new Color(139, 92, 246, 60);
+    public static final Color ACCENT_PURPLE = new Color(124, 58, 237);
+    public static final Color ACCENT_PURPLE_GLOW = new Color(124, 58, 237, 20);
 
-    /** 🟢 AVAILABLE - Vibrant emerald */
+    /** AVAILABLE - Emerald */
     public static final Color STATUS_AVAILABLE = new Color(16, 185, 129);
-    public static final Color STATUS_AVAILABLE_GLOW = new Color(16, 185, 129, 60);
+    public static final Color STATUS_AVAILABLE_GLOW = new Color(16, 185, 129, 20);
 
-    /** 🟡 DISPATCHED - Brilliant amber */
-    public static final Color STATUS_DISPATCHED = new Color(251, 191, 36);
-    public static final Color STATUS_DISPATCHED_GLOW = new Color(251, 191, 36, 60);
+    /** DISPATCHED - Amber */
+    public static final Color STATUS_DISPATCHED = new Color(245, 158, 11);
+    public static final Color STATUS_DISPATCHED_GLOW = new Color(245, 158, 11, 20);
 
-    /** 🔴 CRITICAL - Intense red */
-    public static final Color STATUS_CRITICAL = new Color(239, 68, 68);
-    public static final Color STATUS_CRITICAL_GLOW = new Color(239, 68, 68, 80);
+    /** CRITICAL - Red */
+    public static final Color STATUS_CRITICAL = new Color(220, 38, 38);
+    public static final Color STATUS_CRITICAL_GLOW = new Color(220, 38, 38, 20);
 
-    /** 🔵 EN ROUTE - Deep blue */
+    /** EN ROUTE - Blue */
     public static final Color STATUS_ENROUTE = new Color(59, 130, 246);
-    public static final Color STATUS_ENROUTE_GLOW = new Color(59, 130, 246, 60);
+    public static final Color STATUS_ENROUTE_GLOW = new Color(59, 130, 246, 20);
 
-    /** ⚕️ MEDICAL - Cross red */
+    /** MEDICAL - Cross red */
     public static final Color MEDICAL_RED = new Color(220, 38, 38);
-    public static final Color MEDICAL_RED_GLOW = new Color(220, 38, 38, 70);
+    public static final Color MEDICAL_RED_GLOW = new Color(220, 38, 38, 15);
 
-    /** Warning - Bright orange */
-    public static final Color WARNING = new Color(249, 115, 22);
-    public static final Color WARNING_GLOW = new Color(249, 115, 22, 60);
+    /** Warning - Orange */
+    public static final Color WARNING = new Color(234, 88, 12);
+    public static final Color WARNING_GLOW = new Color(234, 88, 12, 15);
 
-    /** Success - Fresh green */
-    public static final Color SUCCESS = new Color(34, 197, 94);
-    public static final Color SUCCESS_GLOW = new Color(34, 197, 94, 60);
+    /** Success - Green */
+    public static final Color SUCCESS = new Color(22, 163, 74);
+    public static final Color SUCCESS_GLOW = new Color(22, 163, 74, 15);
 
-    /** Info - Sky blue */
-    public static final Color INFO = new Color(56, 189, 248);
-    public static final Color INFO_GLOW = new Color(56, 189, 248, 60);
+    /** Info - Blue */
+    public static final Color INFO = new Color(14, 165, 233);
+    public static final Color INFO_GLOW = new Color(14, 165, 233, 15);
 
-    /** Primary text - crisp white */
-    public static final Color TEXT_PRIMARY = new Color(248, 250, 252);
+    /** Primary text - dark */
+    public static final Color TEXT_PRIMARY = new Color(15, 23, 42);
 
-    /** Secondary text - soft gray */
-    public static final Color TEXT_SECONDARY = new Color(148, 163, 184);
+    /** Secondary text - medium gray */
+    public static final Color TEXT_SECONDARY = new Color(100, 116, 139);
 
     /** Muted text */
-    public static final Color TEXT_MUTED = new Color(100, 116, 139);
+    public static final Color TEXT_MUTED = new Color(148, 163, 184);
 
     /** Tertiary text (alias for muted) */
     public static final Color TEXT_TERTIARY = TEXT_MUTED;
 
-    /** Border - subtle */
-    public static final Color BORDER = new Color(51, 65, 85);
+    /** Border - subtle gray */
+    public static final Color BORDER = new Color(226, 232, 240);
 
     /** Border color (alias for compatibility) */
     public static final Color BORDER_COLOR = BORDER;
 
     /** Border bright */
-    public static final Color BORDER_BRIGHT = new Color(71, 85, 105);
+    public static final Color BORDER_BRIGHT = new Color(203, 213, 225);
 
     /** Border hover */
     public static final Color BORDER_HOVER = BORDER_BRIGHT;
 
     /** Input background */
-    public static final Color INPUT_BG = new Color(15, 23, 42);
+    public static final Color INPUT_BG = new Color(255, 255, 255);
 
     /** Input focused background */
-    public static final Color INPUT_FOCUSED_BG = new Color(20, 28, 47);
+    public static final Color INPUT_FOCUSED_BG = new Color(248, 250, 252);
 
-    /** Overlay dark */
-    public static final Color OVERLAY = new Color(0, 0, 0, 180);
+    /** Overlay */
+    public static final Color OVERLAY = new Color(0, 0, 0, 100);
 
     /** Glass effect */
-    public static final Color GLASS = new Color(255, 255, 255, 10);
+    public static final Color GLASS = new Color(255, 255, 255, 60);
 
     /** Shadow deep */
-    public static final Color SHADOW_DEEP = new Color(0, 0, 0, 100);
+    public static final Color SHADOW_DEEP = new Color(0, 0, 0, 25);
 
     /** Shadow medium */
-    public static final Color SHADOW_MEDIUM = new Color(0, 0, 0, 60);
+    public static final Color SHADOW_MEDIUM = new Color(0, 0, 0, 12);
 
     /** Shadow light */
-    public static final Color SHADOW_LIGHT = new Color(0, 0, 0, 30);
+    public static final Color SHADOW_LIGHT = new Color(0, 0, 0, 6);
 
     /** Shadow for compatibility */
     public static final Color SHADOW = SHADOW_MEDIUM;
@@ -319,7 +319,7 @@ public class UITheme {
     }
 
     /**
-     * ⚠️ Create CRITICAL/EMERGENCY button (pulsing red)
+     * Create CRITICAL/EMERGENCY button (pulsing red)
      */
     public static JButton createCriticalButton(String text, String icon) {
         JButton button = new JButton(icon != null ? icon + " " + text : text) {
@@ -372,42 +372,42 @@ public class UITheme {
     }
 
     /**
-     * 🟢 Create SUCCESS button (green) - single param
+     * Create SUCCESS button (green) - single param
      */
     public static JButton createSuccessButton(String text) {
         return createSuccessButton(text, null);
     }
 
     /**
-     * 🟢 Create SUCCESS button (green)
+     * Create SUCCESS button (green)
      */
     public static JButton createSuccessButton(String text, String icon) {
         return createColoredButton(text, icon, STATUS_AVAILABLE, STATUS_AVAILABLE_GLOW);
     }
 
     /**
-     * 🟡 Create WARNING button (amber) - single param
+     * Create WARNING button (amber) - single param
      */
     public static JButton createWarningButton(String text) {
         return createWarningButton(text, null);
     }
 
     /**
-     * 🟡 Create WARNING button (amber)
+     * Create WARNING button (amber)
      */
     public static JButton createWarningButton(String text, String icon) {
         return createColoredButton(text, icon, STATUS_DISPATCHED, STATUS_DISPATCHED_GLOW);
     }
 
     /**
-     * 🔴 Create DANGER button (red) - single param
+     * Create DANGER button (red) - single param
      */
     public static JButton createDangerButton(String text) {
         return createDangerButton(text, null);
     }
 
     /**
-     * 🔴 Create DANGER button (red)
+     * Create DANGER button (red)
      */
     public static JButton createDangerButton(String text, String icon) {
         return createColoredButton(text, icon, STATUS_CRITICAL, STATUS_CRITICAL_GLOW);
@@ -546,7 +546,7 @@ public class UITheme {
     }
 
     /**
-     * 📝 Create modern text field with smooth animations
+     * Create modern text field with smooth animations
      */
     public static JTextField createTextField(String placeholder) {
         JTextField field = new JTextField() {
@@ -702,14 +702,14 @@ public class UITheme {
 
                 // Gradient border
                 GradientPaint borderGradient = new GradientPaint(
-                        0, 0, new Color(ACCENT.getRed(), ACCENT.getGreen(), ACCENT.getBlue(), 80),
-                        w, h, new Color(GRADIENT_END.getRed(), GRADIENT_END.getGreen(), GRADIENT_END.getBlue(), 80));
+                        0, 0, new Color(ACCENT.getRed(), ACCENT.getGreen(), ACCENT.getBlue(), 40),
+                        w, h, new Color(GRADIENT_END.getRed(), GRADIENT_END.getGreen(), GRADIENT_END.getBlue(), 40));
                 g2d.setPaint(borderGradient);
-                g2d.setStroke(new BasicStroke(1.5f));
+                g2d.setStroke(new BasicStroke(1f));
                 g2d.drawRoundRect(1, 1, w - 3, h - 3, RADIUS_XL, RADIUS_XL);
 
-                // Glass highlight
-                g2d.setColor(GLASS);
+                // Top highlight
+                g2d.setColor(new Color(255, 255, 255, 120));
                 g2d.fillRoundRect(0, 0, w, h / 3, RADIUS_XL, RADIUS_XL);
 
                 g2d.dispose();
@@ -752,7 +752,7 @@ public class UITheme {
     }
 
     /**
-     * 📊 Create STATUS CARD with icon and stats
+     * Create STATUS CARD with icon and stats
      */
     public static JPanel createStatusCard(String title, String value, String icon, Color color) {
         JPanel card = new JPanel() {
@@ -812,7 +812,7 @@ public class UITheme {
     }
 
     /**
-     * 🏥 Create EMERGENCY ALERT PANEL
+     * Create EMERGENCY ALERT PANEL
      */
     public static JPanel createEmergencyAlert(String message, boolean isPulsing) {
         JPanel alert = new JPanel() {
@@ -861,7 +861,7 @@ public class UITheme {
         alert.setBorder(new EmptyBorder(SPACE_LG, SPACE_XL, SPACE_LG, SPACE_XL));
 
         // Add icon
-        JLabel iconLabel = new JLabel("🚨");
+        JLabel iconLabel = new JLabel("!!");
         iconLabel.setFont(new Font(FONT_PRIMARY, Font.PLAIN, 24));
         iconLabel.setForeground(STATUS_CRITICAL);
         alert.add(iconLabel, BorderLayout.WEST);
@@ -952,7 +952,7 @@ public class UITheme {
     }
 
     /**
-     * 📋 Create PREMIUM TABLE
+     * Create PREMIUM TABLE
      */
     public static JTable createStyledTable(javax.swing.table.DefaultTableModel model) {
         JTable table = new JTable(model) {
@@ -962,10 +962,10 @@ public class UITheme {
 
                 if (!isRowSelected(row)) {
                     // Alternating rows with subtle difference
-                    c.setBackground(row % 2 == 0 ? CARD_BG : new Color(20, 24, 32));
+                    c.setBackground(row % 2 == 0 ? CARD_BG : new Color(248, 250, 252));
                 } else {
                     // Selected row with accent color
-                    c.setBackground(new Color(ACCENT.getRed(), ACCENT.getGreen(), ACCENT.getBlue(), 35));
+                    c.setBackground(new Color(ACCENT.getRed(), ACCENT.getGreen(), ACCENT.getBlue(), 25));
                 }
 
                 // Add padding effect
@@ -984,7 +984,7 @@ public class UITheme {
         table.setShowGrid(true);
         table.setGridColor(new Color(BORDER.getRed(), BORDER.getGreen(), BORDER.getBlue(), 50));
         table.setIntercellSpacing(new Dimension(0, 0));
-        table.setSelectionBackground(new Color(ACCENT.getRed(), ACCENT.getGreen(), ACCENT.getBlue(), 40));
+        table.setSelectionBackground(new Color(ACCENT.getRed(), ACCENT.getGreen(), ACCENT.getBlue(), 30));
         table.setSelectionForeground(TEXT_PRIMARY);
 
         // Header
@@ -1146,15 +1146,15 @@ public class UITheme {
     public static String getSeverityIcon(String severity) {
         switch (severity) {
             case "Critical":
-                return "🔴";
+                return "[!]";
             case "High":
-                return "🟠";
+                return "[H]";
             case "Medium":
-                return "🟡";
+                return "[M]";
             case "Low":
-                return "🟢";
+                return "[L]";
             default:
-                return "⚪";
+                return "[-]";
         }
     }
 
@@ -1182,32 +1182,32 @@ public class UITheme {
     public static String getAmbulanceStatusIcon(String status) {
         switch (status) {
             case "green":
-                return "🟢 Available";
+                return "Available";
             case "yellow":
-                return "🟡 Dispatched";
+                return "Dispatched";
             case "red":
-                return "🔴 On Scene";
+                return "On Scene";
             case "blue":
-                return "🔵 En Route";
+                return "En Route";
             default:
-                return "⚪ Unknown";
+                return "Unknown";
         }
     }
 
     /**
-     * Emergency icons
+     * Emergency icons - text-based for consistency
      */
-    public static final String ICON_AMBULANCE = "🚑";
-    public static final String ICON_HOSPITAL = "🏥";
-    public static final String ICON_EMERGENCY = "🚨";
-    public static final String ICON_LOCATION = "📍";
-    public static final String ICON_TIME = "⏱️";
-    public static final String ICON_ALERT = "⚠️";
+    public static final String ICON_AMBULANCE = "[AMB]";
+    public static final String ICON_HOSPITAL = "[H]";
+    public static final String ICON_EMERGENCY = "[!]";
+    public static final String ICON_LOCATION = "[LOC]";
+    public static final String ICON_TIME = "[T]";
+    public static final String ICON_ALERT = "[!]";
     public static final String ICON_CHECK = "✓";
-    public static final String ICON_MAP = "🗺️";
-    public static final String ICON_PHONE = "📞";
-    public static final String ICON_PERSON = "👤";
-    public static final String ICON_MEDICAL = "⚕️";
-    public static final String ICON_HEARTBEAT = "💓";
-    public static final String ICON_SIREN = "🔔";
+    public static final String ICON_MAP = "[MAP]";
+    public static final String ICON_PHONE = "[TEL]";
+    public static final String ICON_PERSON = "[USR]";
+    public static final String ICON_MEDICAL = "[MED]";
+    public static final String ICON_HEARTBEAT = "[HR]";
+    public static final String ICON_SIREN = "[SIR]";
 }

@@ -261,31 +261,105 @@ public class AmbulanceMovementSync {
     }
 
     /**
-     * Update ambulance status and reset completed ones
+     * Update ambulance status and handle hospital transport
      */
     private void updateAmbulanceStatus() {
         try {
-            // Reset red ambulances back to green after some time (10% chance each cycle)
-            String sql = "SELECT ambulance_id, assigned_accident_id FROM ambulances WHERE status = 'red'";
+            // Handle red ambulances (at scene) - move them to nearest hospital
+            String sql = "SELECT a.ambulance_id, a.assigned_accident_id, a.current_x, a.current_y, " +
+                    "a.assigned_hospital_id FROM ambulances a WHERE a.status = 'red'";
             ResultSet rs = dbManager.executeQuery(sql);
 
             while (rs.next()) {
-                if (Math.random() < 0.1) { // 10% chance to complete
-                    int ambulanceId = rs.getInt("ambulance_id");
-                    int accidentId = rs.getInt("assigned_accident_id");
+                int ambulanceId = rs.getInt("ambulance_id");
+                int accidentId = rs.getInt("assigned_accident_id");
+                int hospitalId = rs.getInt("assigned_hospital_id");
+                int currentX = rs.getInt("current_x");
+                int currentY = rs.getInt("current_y");
 
-                    String update = "UPDATE ambulances SET status = 'green', " +
-                            "assigned_accident_id = NULL, assigned_hospital_id = NULL " +
-                            "WHERE ambulance_id = ?";
-                    PreparedStatement pstmt = dbManager.getConnection().prepareStatement(update);
-                    pstmt.setInt(1, ambulanceId);
-                    pstmt.executeUpdate();
+                if (hospitalId == 0) {
+                    // Find nearest hospital and start transport
+                    String hospSql = "SELECT hospital_id, x, y, name FROM hospitals ORDER BY " +
+                            "SQRT(POW(x - ?, 2) + POW(y - ?, 2)) LIMIT 1";
+                    PreparedStatement hospPstmt = dbManager.getConnection().prepareStatement(hospSql);
+                    hospPstmt.setInt(1, currentX);
+                    hospPstmt.setInt(2, currentY);
+                    ResultSet hospRs = hospPstmt.executeQuery();
 
-                    // Remove from assigned set so it can be reassigned
-                    assignedAccidents.remove(accidentId);
+                    if (hospRs.next()) {
+                        int nearestHospId = hospRs.getInt("hospital_id");
+                        int hospX = hospRs.getInt("x");
+                        int hospY = hospRs.getInt("y");
+                        String hospName = hospRs.getString("name");
 
-                    System.out.println(String.format("[AmbulanceMovementSync] Ambulance %d completed mission",
-                            ambulanceId));
+                        // Assign hospital and set target
+                        String update = "UPDATE ambulances SET assigned_hospital_id = ?, target_x = ?, target_y = ? " +
+                                "WHERE ambulance_id = ?";
+                        PreparedStatement pstmt = dbManager.getConnection().prepareStatement(update);
+                        pstmt.setInt(1, nearestHospId);
+                        pstmt.setInt(2, hospX);
+                        pstmt.setInt(3, hospY);
+                        pstmt.setInt(4, ambulanceId);
+                        pstmt.executeUpdate();
+
+                        notificationManager.showInfo("Patient Pickup",
+                                String.format("Ambulance #%d transporting patient to %s", ambulanceId, hospName));
+                        System.out.println(
+                                String.format("[AmbulanceMovementSync] Ambulance %d transporting to hospital %s",
+                                        ambulanceId, hospName));
+                    }
+                } else {
+                    // Already has hospital assigned - check if arrived at hospital
+                    String hospSql = "SELECT x, y FROM hospitals WHERE hospital_id = ?";
+                    PreparedStatement hospPstmt = dbManager.getConnection().prepareStatement(hospSql);
+                    hospPstmt.setInt(1, hospitalId);
+                    ResultSet hospRs = hospPstmt.executeQuery();
+
+                    if (hospRs.next()) {
+                        int hospX = hospRs.getInt("x");
+                        int hospY = hospRs.getInt("y");
+                        double distance = Math.sqrt(Math.pow(hospX - currentX, 2) + Math.pow(hospY - currentY, 2));
+
+                        if (distance <= 15) {
+                            // Arrived at hospital - complete mission
+                            String update = "UPDATE ambulances SET status = 'green', " +
+                                    "assigned_accident_id = NULL, assigned_hospital_id = NULL " +
+                                    "WHERE ambulance_id = ?";
+                            PreparedStatement pstmt = dbManager.getConnection().prepareStatement(update);
+                            pstmt.setInt(1, ambulanceId);
+                            pstmt.executeUpdate();
+
+                            assignedAccidents.remove(accidentId);
+
+                            notificationManager.showInfo("Patient Delivered",
+                                    String.format("Ambulance #%d delivered patient to hospital", ambulanceId));
+                            System.out.println(String.format(
+                                    "[AmbulanceMovementSync] Ambulance %d completed mission (delivered to hospital)",
+                                    ambulanceId));
+                        } else {
+                            // Still moving to hospital - update position
+                            int dx = hospX - currentX;
+                            int dy = hospY - currentY;
+                            int speed = 15;
+                            double ratio = speed / distance;
+                            int newX = currentX + (int) (dx * ratio);
+                            int newY = currentY + (int) (dy * ratio);
+
+                            double newLat = 13.0827 + (newX - 200) * 0.0005;
+                            double newLng = 80.2707 + (newY - 200) * 0.0005;
+
+                            String update = "UPDATE ambulances SET current_x = ?, current_y = ?, latitude = ?, longitude = ? "
+                                    +
+                                    "WHERE ambulance_id = ?";
+                            PreparedStatement pstmt = dbManager.getConnection().prepareStatement(update);
+                            pstmt.setInt(1, newX);
+                            pstmt.setInt(2, newY);
+                            pstmt.setDouble(3, newLat);
+                            pstmt.setDouble(4, newLng);
+                            pstmt.setInt(5, ambulanceId);
+                            pstmt.executeUpdate();
+                        }
+                    }
                 }
             }
         } catch (SQLException e) {

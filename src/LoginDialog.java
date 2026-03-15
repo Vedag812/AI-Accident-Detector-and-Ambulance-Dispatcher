@@ -71,8 +71,9 @@ public class LoginDialog extends JDialog {
         mainPanel.add(Box.createVerticalStrut(20));
 
         // Logo/Icon
-        JLabel iconLabel = new JLabel("🚑", SwingConstants.CENTER);
-        iconLabel.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 64));
+        JLabel iconLabel = new JLabel("+", SwingConstants.CENTER);
+        iconLabel.setFont(new Font("Segoe UI", Font.BOLD, 64));
+        iconLabel.setForeground(UITheme.ACCENT);
         iconLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
         mainPanel.add(iconLabel);
 
@@ -380,5 +381,3 @@ public class LoginDialog extends JDialog {
         return dialog;
     }
 }
-
-

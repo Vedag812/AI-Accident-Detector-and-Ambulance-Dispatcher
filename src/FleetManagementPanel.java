@@ -34,7 +34,7 @@ public class FleetManagementPanel extends JPanel {
         JPanel headerPanel = new JPanel(new BorderLayout());
         headerPanel.setOpaque(false);
 
-        JLabel titleLabel = UITheme.createTitleLabel("🚑 Fleet Management");
+        JLabel titleLabel = UITheme.createTitleLabel("Fleet Management");
         headerPanel.add(titleLabel, BorderLayout.WEST);
 
         JButton refreshBtn = UITheme.createSecondaryButton("↻ Refresh");
@@ -72,9 +72,11 @@ public class FleetManagementPanel extends JPanel {
 
         statsPanel.add(createStatCard("Total Fleet", String.valueOf(stats.getOrDefault("total", 0)), UITheme.ACCENT));
         statsPanel.add(
-                createStatCard("Available", String.valueOf(stats.getOrDefault("available", 0)), UITheme.STATUS_AVAILABLE));
+                createStatCard("Available", String.valueOf(stats.getOrDefault("available", 0)),
+                        UITheme.STATUS_AVAILABLE));
         statsPanel
-                .add(createStatCard("Low Fuel", String.valueOf(stats.getOrDefault("low_fuel", 0)), UITheme.STATUS_CRITICAL));
+                .add(createStatCard("Low Fuel", String.valueOf(stats.getOrDefault("low_fuel", 0)),
+                        UITheme.STATUS_CRITICAL));
 
         double avgFuel = stats.get("avg_fuel") != null ? ((Number) stats.get("avg_fuel")).doubleValue() : 0;
         statsPanel.add(createStatCard("Avg Fuel", String.format("%.0f%%", avgFuel), UITheme.STATUS_DISPATCHED));
@@ -139,7 +141,8 @@ public class FleetManagementPanel extends JPanel {
                 bar.setStringPainted(true);
                 bar.setString(fuel + "%");
                 bar.setForeground(
-                        fuel < 30 ? UITheme.STATUS_CRITICAL : fuel < 60 ? UITheme.STATUS_DISPATCHED : UITheme.STATUS_AVAILABLE);
+                        fuel < 30 ? UITheme.STATUS_CRITICAL
+                                : fuel < 60 ? UITheme.STATUS_DISPATCHED : UITheme.STATUS_AVAILABLE);
                 bar.setBackground(UITheme.PANEL_BG);
                 bar.setBorderPainted(false);
 
@@ -164,7 +167,7 @@ public class FleetManagementPanel extends JPanel {
         scheduleBtn.addActionListener(e -> scheduleService());
         actionsPanel.add(scheduleBtn);
 
-        JButton trackBtn = UITheme.createSecondaryButton("📍 Track on Map");
+        JButton trackBtn = UITheme.createSecondaryButton("Track on Map");
         trackBtn.addActionListener(e -> trackOnMap());
         actionsPanel.add(trackBtn);
 
@@ -331,5 +334,3 @@ public class FleetManagementPanel extends JPanel {
         }
     }
 }
-
-

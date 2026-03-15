@@ -40,7 +40,7 @@ public class IncidentReportPanel extends JPanel {
         JPanel headerPanel = new JPanel(new BorderLayout());
         headerPanel.setOpaque(false);
 
-        JLabel titleLabel = UITheme.createTitleLabel("📋 Incident Reports");
+        JLabel titleLabel = UITheme.createTitleLabel("Incident Reports");
         headerPanel.add(titleLabel, BorderLayout.WEST);
 
         JButton newReportBtn = UITheme.createPrimaryButton("+ New Report");
@@ -217,11 +217,11 @@ public class IncidentReportPanel extends JPanel {
         viewBtn.addActionListener(e -> viewReportDetails());
         actionsPanel.add(viewBtn);
 
-        JButton exportBtn = UITheme.createSecondaryButton("📄 Export Report");
+        JButton exportBtn = UITheme.createSecondaryButton("Export Report");
         exportBtn.addActionListener(e -> exportReport());
         actionsPanel.add(exportBtn);
 
-        JButton exportAllBtn = UITheme.createSecondaryButton("📁 Export All");
+        JButton exportAllBtn = UITheme.createSecondaryButton("Export All");
         exportAllBtn.addActionListener(e -> exportAllReports());
         actionsPanel.add(exportAllBtn);
 
@@ -476,11 +476,11 @@ public class IncidentReportPanel extends JPanel {
                         ".footer{margin-top:30px;padding-top:20px;border-top:1px solid #e5e7eb;color:#6b7280;font-size:12px;}\n");
                 html.append("</style>\n</head>\n<body>\n");
                 html.append("<div class='report'>\n");
-                html.append("<h1>🚑 Incident Report #").append(reportId).append("</h1>\n");
+                html.append("<h1>Incident Report #").append(reportId).append("</h1>\n");
 
                 // Basic Info
                 html.append("<div class='section'>\n");
-                html.append("<h3>📍 Incident Details</h3>\n");
+                html.append("<h3>Incident Details</h3>\n");
                 html.append("<div class='field'><span class='label'>Location:</span><span class='value'>")
                         .append(rs.getString("location")).append("</span></div>\n");
 
@@ -495,7 +495,7 @@ public class IncidentReportPanel extends JPanel {
 
                 // Response Info
                 html.append("<div class='section'>\n");
-                html.append("<h3>⏱️ Response Information</h3>\n");
+                html.append("<h3>Response Information</h3>\n");
                 html.append("<div class='field'><span class='label'>Response Time:</span><span class='value'>")
                         .append(rs.getInt("response_time_minutes")).append(" minutes</span></div>\n");
                 html.append("<div class='field'><span class='label'>Traffic Conditions:</span><span class='value'>")
@@ -508,7 +508,7 @@ public class IncidentReportPanel extends JPanel {
                 String complications = rs.getString("complications");
                 if (complications != null && !complications.isEmpty()) {
                     html.append("<div class='section'>\n");
-                    html.append("<h3>⚠️ Complications</h3>\n");
+                    html.append("<h3>Complications</h3>\n");
                     html.append("<p>").append(complications).append("</p>\n");
                     html.append("</div>\n");
                 }
@@ -517,7 +517,7 @@ public class IncidentReportPanel extends JPanel {
                 String notes = rs.getString("notes");
                 if (notes != null && !notes.isEmpty()) {
                     html.append("<div class='section'>\n");
-                    html.append("<h3>📝 Notes</h3>\n");
+                    html.append("<h3>Notes</h3>\n");
                     html.append("<p>").append(notes).append("</p>\n");
                     html.append("</div>\n");
                 }
@@ -572,7 +572,7 @@ public class IncidentReportPanel extends JPanel {
             html.append(".footer{text-align:center;margin-top:30px;color:#6b7280;}\n");
             html.append("@media print{body{background:white;}}\n");
             html.append("</style>\n</head>\n<body>\n");
-            html.append("<h1>🚑 Incident Reports Summary</h1>\n");
+            html.append("<h1>Incident Reports Summary</h1>\n");
             html.append("<p style='text-align:center;color:#6b7280;'>Generated: ")
                     .append(sdf.format(new java.util.Date())).append("</p>\n");
             html.append("<table>\n<thead>\n<tr>\n");
@@ -627,5 +627,3 @@ public class IncidentReportPanel extends JPanel {
         }
     }
 }
-
-

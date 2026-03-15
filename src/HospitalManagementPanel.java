@@ -37,7 +37,7 @@ public class HospitalManagementPanel extends JPanel {
         JPanel headerPanel = new JPanel(new BorderLayout());
         headerPanel.setOpaque(false);
 
-        JLabel titleLabel = UITheme.createTitleLabel("🏥 Hospital Management");
+        JLabel titleLabel = UITheme.createTitleLabel("Hospital Management");
         headerPanel.add(titleLabel, BorderLayout.WEST);
 
         JButton refreshBtn = UITheme.createSecondaryButton("↻ Refresh");
@@ -350,5 +350,3 @@ public class HospitalManagementPanel extends JPanel {
         }
     }
 }
-
-

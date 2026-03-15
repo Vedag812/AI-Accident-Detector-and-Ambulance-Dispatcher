@@ -35,7 +35,7 @@ public class Main extends JFrame {
     private String[] scanLocations;
     private int currentScanIndex = 0;
 
-    private JSlider intervalSlider;
+    private JComboBox<String> intervalCombo;
     private JToggleButton autoGenToggle;
     private Timer refreshTimer;
     private Timer accidentGenTimer;
@@ -70,7 +70,7 @@ public class Main extends JFrame {
     }
 
     private void initializeUI() {
-        setTitle("🚑 AI Accident Detector - Command Center");
+        setTitle("AI Accident Detector — Command Center");
         setSize(1500, 950);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
@@ -108,7 +108,7 @@ public class Main extends JFrame {
         leftPanel.setOpaque(false);
         leftPanel.setLayout(new BoxLayout(leftPanel, BoxLayout.Y_AXIS));
 
-        JLabel iconTitle = new JLabel("🚑 AI Accident Detector");
+        JLabel iconTitle = new JLabel("AI Accident Detector");
         iconTitle.setFont(new Font("Segoe UI", Font.BOLD, 26));
         iconTitle.setForeground(UITheme.TEXT_PRIMARY);
         leftPanel.add(iconTitle);
@@ -132,15 +132,15 @@ public class Main extends JFrame {
                 Graphics2D g2d = (Graphics2D) g.create();
                 g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
-                // Background with gradient
-                GradientPaint bgGrad = new GradientPaint(0, 0, new Color(15, 23, 42),
-                        getWidth(), getHeight(), new Color(30, 41, 59));
+                // Background with light gradient
+                GradientPaint bgGrad = new GradientPaint(0, 0, new Color(255, 255, 255),
+                        getWidth(), getHeight(), new Color(248, 250, 252));
                 g2d.setPaint(bgGrad);
                 g2d.fillRoundRect(0, 0, getWidth(), getHeight(), 16, 16);
 
                 // Border
-                g2d.setColor(new Color(71, 85, 105));
-                g2d.setStroke(new BasicStroke(1.5f));
+                g2d.setColor(new Color(226, 232, 240));
+                g2d.setStroke(new BasicStroke(1f));
                 g2d.drawRoundRect(1, 1, getWidth() - 3, getHeight() - 3, 14, 14);
 
                 // Circular progress indicator
@@ -149,8 +149,8 @@ public class Main extends JFrame {
                 int y = (getHeight() - size) / 2;
 
                 // Background circle
-                g2d.setColor(new Color(51, 65, 85));
-                g2d.setStroke(new BasicStroke(4f));
+                g2d.setColor(new Color(226, 232, 240));
+                g2d.setStroke(new BasicStroke(3f));
                 g2d.drawOval(x, y, size, size);
 
                 // Progress arc
@@ -164,7 +164,7 @@ public class Main extends JFrame {
                 // Center icon
                 g2d.setColor(progressColor);
                 g2d.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 22));
-                String icon = aiPhase == 2 ? "🚨" : aiPhase == 1 ? "🔍" : "📡";
+                String icon = aiPhase == 2 ? "!!" : aiPhase == 1 ? "?" : "~";
                 FontMetrics fm = g2d.getFontMetrics();
                 g2d.drawString(icon, x + (size - fm.stringWidth(icon)) / 2, y + size / 2 + 8);
 
@@ -174,18 +174,19 @@ public class Main extends JFrame {
         aiDetectionPanel.setPreferredSize(new Dimension(320, 80));
         aiDetectionPanel.setLayout(null);
         aiDetectionPanel.setOpaque(false);
+        aiDetectionPanel.setVisible(false); // Hidden until AI starts
 
         // Status label
-        aiStatusLabel = new JLabel("● STANDBY");
+        aiStatusLabel = new JLabel("");
         aiStatusLabel.setFont(new Font("Segoe UI", Font.BOLD, 13));
         aiStatusLabel.setForeground(UITheme.TEXT_MUTED);
         aiStatusLabel.setBounds(90, 10, 200, 20);
         aiDetectionPanel.add(aiStatusLabel);
 
         // Location being scanned
-        aiLocationLabel = new JLabel("Ready to scan...");
+        aiLocationLabel = new JLabel("");
         aiLocationLabel.setFont(new Font("Segoe UI", Font.PLAIN, 11));
-        aiLocationLabel.setForeground(new Color(148, 163, 184));
+        aiLocationLabel.setForeground(new Color(100, 116, 139));
         aiLocationLabel.setBounds(90, 30, 220, 18);
         aiDetectionPanel.add(aiLocationLabel);
 
@@ -199,37 +200,30 @@ public class Main extends JFrame {
         // Confidence
         aiConfidenceLabel = new JLabel("");
         aiConfidenceLabel.setFont(new Font("Consolas", Font.BOLD, 11));
-        aiConfidenceLabel.setForeground(new Color(148, 163, 184));
+        aiConfidenceLabel.setForeground(new Color(100, 116, 139));
         aiConfidenceLabel.setBounds(200, 50, 100, 18);
         aiDetectionPanel.add(aiConfidenceLabel);
 
-        // Interval slider
-        JPanel sliderPanel = new JPanel();
-        sliderPanel.setOpaque(false);
-        sliderPanel.setLayout(new BoxLayout(sliderPanel, BoxLayout.Y_AXIS));
+        // Interval dropdown
+        JPanel intervalPanel = new JPanel();
+        intervalPanel.setOpaque(false);
+        intervalPanel.setLayout(new BoxLayout(intervalPanel, BoxLayout.Y_AXIS));
 
-        JLabel sliderLabel = new JLabel("Scan Interval");
-        sliderLabel.setFont(new Font("Segoe UI", Font.PLAIN, 11));
-        sliderLabel.setForeground(UITheme.TEXT_SECONDARY);
-        sliderLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        JLabel intervalLabel = new JLabel("Scan Interval");
+        intervalLabel.setFont(new Font("Segoe UI", Font.PLAIN, 11));
+        intervalLabel.setForeground(UITheme.TEXT_SECONDARY);
+        intervalLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        intervalSlider = new JSlider(3, 15, 5);
-        intervalSlider.setOpaque(false);
-        intervalSlider.setForeground(UITheme.TEXT_PRIMARY);
-        intervalSlider.setPreferredSize(new Dimension(120, 30));
-        intervalSlider.addChangeListener(e -> {
-            countdownValue = intervalSlider.getValue();
-        });
+        String[] intervals = { "3 sec", "5 sec", "8 sec", "10 sec", "15 sec" };
+        intervalCombo = new JComboBox<>(intervals);
+        intervalCombo.setSelectedIndex(1); // default 5 sec
+        intervalCombo.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        intervalCombo.setMaximumSize(new Dimension(100, 30));
+        intervalCombo.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        JLabel valueLabel = new JLabel("5 sec");
-        valueLabel.setFont(new Font("Segoe UI", Font.BOLD, 11));
-        valueLabel.setForeground(UITheme.ACCENT);
-        valueLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-        intervalSlider.addChangeListener(e -> valueLabel.setText(intervalSlider.getValue() + " sec"));
-
-        sliderPanel.add(sliderLabel);
-        sliderPanel.add(intervalSlider);
-        sliderPanel.add(valueLabel);
+        intervalPanel.add(intervalLabel);
+        intervalPanel.add(Box.createVerticalStrut(4));
+        intervalPanel.add(intervalCombo);
 
         // Toggle button
         autoGenToggle = new JToggleButton("▶ START AI") {
@@ -268,7 +262,7 @@ public class Main extends JFrame {
         autoGenToggle.addActionListener(e -> toggleAutoGeneration());
 
         centerPanel.add(aiDetectionPanel);
-        centerPanel.add(sliderPanel);
+        centerPanel.add(intervalPanel);
         centerPanel.add(autoGenToggle);
 
         // Right side - Stats & Weather
@@ -305,7 +299,7 @@ public class Main extends JFrame {
             if (countdownValue <= 0) {
                 // Generate accident
                 generateRandomAccident();
-                countdownValue = intervalSlider.getValue();
+                countdownValue = getSelectedInterval();
                 aiScanProgress = 0; // Reset animation
                 aiPhase = 0;
             }
@@ -320,27 +314,27 @@ public class Main extends JFrame {
                 // Update location being scanned
                 if (aiScanProgress % 20 == 0 && scanLocations != null) {
                     currentScanIndex = (currentScanIndex + 1) % scanLocations.length;
-                    aiLocationLabel.setText("📍 " + scanLocations[currentScanIndex]);
+                    aiLocationLabel.setText(scanLocations[currentScanIndex]);
                 }
 
                 // Phase transitions based on progress
                 if (aiScanProgress < 60) {
                     aiPhase = 0; // Scanning
-                    aiStatusLabel.setText("● SCANNING");
+                    aiStatusLabel.setText("SCANNING");
                     aiStatusLabel.setForeground(UITheme.STATUS_AVAILABLE);
                     aiThreatLabel.setText("Threat: LOW");
                     aiThreatLabel.setForeground(UITheme.STATUS_AVAILABLE);
                     aiConfidenceLabel.setText(aiScanProgress + "%");
                 } else if (aiScanProgress < 85) {
                     aiPhase = 1; // Analyzing
-                    aiStatusLabel.setText("● ANALYZING");
+                    aiStatusLabel.setText("ANALYZING");
                     aiStatusLabel.setForeground(UITheme.STATUS_DISPATCHED);
                     aiThreatLabel.setText("Threat: MEDIUM");
                     aiThreatLabel.setForeground(UITheme.STATUS_DISPATCHED);
                     aiConfidenceLabel.setText(aiScanProgress + "%");
                 } else if (aiScanProgress >= 100) {
                     aiPhase = 2; // Detected!
-                    aiStatusLabel.setText("🚨 DETECTED!");
+                    aiStatusLabel.setText("DETECTED!");
                     aiStatusLabel.setForeground(UITheme.STATUS_CRITICAL);
                     String[] threats = { "LOW", "MEDIUM", "HIGH", "CRITICAL" };
                     int threatIdx = random.nextInt(4);
@@ -364,9 +358,9 @@ public class Main extends JFrame {
         panel.setBackground(UITheme.DARK_BG);
         panel.setBorder(new EmptyBorder(15, 20, 15, 20));
 
-        panel.add(createTableCard("🚨 Active Accidents", createAccidentsTable(), UITheme.STATUS_CRITICAL));
-        panel.add(createTableCard("🚑 Ambulance Fleet", createAmbulancesTable(), UITheme.STATUS_ENROUTE));
-        panel.add(createTableCard("🏥 Hospitals", createHospitalsTable(), UITheme.STATUS_AVAILABLE));
+        panel.add(createTableCard("Active Accidents", createAccidentsTable(), UITheme.STATUS_CRITICAL));
+        panel.add(createTableCard("Ambulance Fleet", createAmbulancesTable(), UITheme.STATUS_ENROUTE));
+        panel.add(createTableCard("Hospitals", createHospitalsTable(), UITheme.STATUS_AVAILABLE));
 
         return panel;
     }
@@ -384,8 +378,8 @@ public class Main extends JFrame {
                 g2d.setColor(accentColor);
                 g2d.fillRoundRect(20, 0, getWidth() - 40, 3, 3, 3);
 
-                // Subtle shadow
-                g2d.setColor(new Color(15, 23, 42, 15));
+                // Border
+                g2d.setColor(new Color(226, 232, 240));
                 g2d.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 16, 16);
                 g2d.dispose();
             }
@@ -473,16 +467,16 @@ public class Main extends JFrame {
         JPanel primaryRow = new JPanel(new FlowLayout(FlowLayout.CENTER, 15, 10));
         primaryRow.setOpaque(false);
 
-        primaryRow.add(createActionButton("🚨 Report", UITheme.STATUS_CRITICAL, e -> showReportAccidentDialog()));
-        primaryRow.add(createActionButton("🗺️ Map", UITheme.STATUS_AVAILABLE, e -> showGoogleMaps()));
-        primaryRow.add(createActionButton("📊 Analytics", UITheme.ACCENT_PURPLE, e -> showAnalytics()));
-        primaryRow.add(createActionButton("🏥 Hospitals", UITheme.STATUS_ENROUTE, e -> showHospitalManagement()));
-        primaryRow.add(createActionButton("🚑 Fleet", UITheme.STATUS_DISPATCHED, e -> showFleetManagement()));
-        primaryRow.add(createActionButton("👨‍✈️ Drivers", new Color(236, 72, 153), e -> showDriverManagement()));
-        primaryRow.add(createActionButton("📋 Reports", new Color(20, 184, 166), e -> showIncidentReports()));
-        primaryRow.add(createActionButton("💬 Messages", UITheme.ACCENT, e -> showCommunicationPanel()));
-        primaryRow.add(createActionButton("🔄 Refresh", UITheme.TEXT_SECONDARY, e -> refreshAllData()));
-        primaryRow.add(createActionButton("🚪 Logout", new Color(107, 114, 128), e -> logout()));
+        primaryRow.add(createActionButton("Report Accident", UITheme.STATUS_CRITICAL, e -> showReportAccidentDialog()));
+        primaryRow.add(createActionButton("Live Map", UITheme.ACCENT, e -> showGoogleMaps()));
+        primaryRow.add(createActionButton("Analytics", UITheme.ACCENT, e -> showAnalytics()));
+        primaryRow.add(createActionButton("Hospitals", UITheme.ACCENT_PURPLE, e -> showHospitalManagement()));
+        primaryRow.add(createActionButton("Fleet", UITheme.ACCENT_PURPLE, e -> showFleetManagement()));
+        primaryRow.add(createActionButton("Drivers", UITheme.ACCENT_PURPLE, e -> showDriverManagement()));
+        primaryRow.add(createActionButton("Reports", UITheme.ACCENT_PURPLE, e -> showIncidentReports()));
+        primaryRow.add(createActionButton("Messages", UITheme.ACCENT, e -> showCommunicationPanel()));
+        primaryRow.add(createActionButton("Refresh", UITheme.TEXT_SECONDARY, e -> refreshAllData()));
+        primaryRow.add(createActionButton("Logout", UITheme.TEXT_SECONDARY, e -> logout()));
 
         panel.add(primaryRow, BorderLayout.CENTER);
 
@@ -490,7 +484,7 @@ public class Main extends JFrame {
     }
 
     private void showAnalytics() {
-        JFrame frame = new JFrame("📊 Analytics Dashboard");
+        JFrame frame = new JFrame("Analytics Dashboard");
         frame.setSize(1200, 800);
         frame.setLocationRelativeTo(this);
         frame.add(new AnalyticsDashboard());
@@ -498,7 +492,7 @@ public class Main extends JFrame {
     }
 
     private void showHospitalManagement() {
-        JFrame frame = new JFrame("🏥 Hospital Management");
+        JFrame frame = new JFrame("Hospital Management");
         frame.setSize(1100, 700);
         frame.setLocationRelativeTo(this);
         frame.add(new HospitalManagementPanel());
@@ -506,7 +500,7 @@ public class Main extends JFrame {
     }
 
     private void showFleetManagement() {
-        JFrame frame = new JFrame("🚑 Fleet Management");
+        JFrame frame = new JFrame("Fleet Management");
         frame.setSize(1100, 750);
         frame.setLocationRelativeTo(this);
         frame.add(new FleetManagementPanel());
@@ -514,7 +508,7 @@ public class Main extends JFrame {
     }
 
     private void showDriverManagement() {
-        JFrame frame = new JFrame("👨‍✈️ Driver Management");
+        JFrame frame = new JFrame("Driver Management");
         frame.setSize(1050, 650);
         frame.setLocationRelativeTo(this);
         frame.add(new DriverManagementPanel());
@@ -522,7 +516,7 @@ public class Main extends JFrame {
     }
 
     private void showIncidentReports() {
-        JFrame frame = new JFrame("📋 Incident Reports");
+        JFrame frame = new JFrame("Incident Reports");
         frame.setSize(1100, 700);
         frame.setLocationRelativeTo(this);
         frame.add(new IncidentReportPanel());
@@ -538,17 +532,17 @@ public class Main extends JFrame {
 
                 if (getModel().isRollover()) {
                     g2d.setColor(color);
+                    g2d.fillRoundRect(0, 0, getWidth(), getHeight(), 10, 10);
+                    g2d.setColor(Color.WHITE);
                 } else {
-                    g2d.setColor(color.darker().darker());
-                }
-                g2d.fillRoundRect(0, 0, getWidth(), getHeight(), 10, 10);
-
-                if (!getModel().isRollover()) {
+                    g2d.setColor(new Color(color.getRed(), color.getGreen(), color.getBlue(), 15));
+                    g2d.fillRoundRect(0, 0, getWidth(), getHeight(), 10, 10);
                     g2d.setColor(color);
+                    g2d.setStroke(new BasicStroke(1.5f));
                     g2d.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 10, 10);
+                    g2d.setColor(color);
                 }
 
-                g2d.setColor(Color.WHITE);
                 g2d.setFont(getFont());
                 FontMetrics fm = g2d.getFontMetrics();
                 int x = (getWidth() - fm.stringWidth(getText())) / 2;
@@ -558,7 +552,7 @@ public class Main extends JFrame {
             }
         };
         button.setFont(new Font("Segoe UI", Font.BOLD, 13));
-        button.setPreferredSize(new Dimension(160, 45));
+        button.setPreferredSize(new Dimension(130, 40));
         button.setContentAreaFilled(false);
         button.setBorderPainted(false);
         button.setFocusPainted(false);
@@ -567,28 +561,35 @@ public class Main extends JFrame {
         return button;
     }
 
+    private int getSelectedInterval() {
+        String selected = (String) intervalCombo.getSelectedItem();
+        return Integer.parseInt(selected.replace(" sec", ""));
+    }
+
     private void toggleAutoGeneration() {
         if (autoGenToggle.isSelected()) {
-            countdownValue = intervalSlider.getValue();
+            countdownValue = getSelectedInterval();
             aiScanProgress = 0;
             aiPhase = 0;
             accidentGenTimer.start();
             aiAnimationTimer.start();
-            aiStatusLabel.setText("● SCANNING");
+            aiDetectionPanel.setVisible(true);
+            aiStatusLabel.setText("SCANNING");
             aiStatusLabel.setForeground(UITheme.STATUS_AVAILABLE);
-            aiLocationLabel.setText("📍 " + scanLocations[0]);
+            aiLocationLabel.setText(scanLocations[0]);
             notificationManager.showWarning("AI Detection Active",
-                    "Scanning for accidents every " + intervalSlider.getValue() + " seconds");
+                    "Scanning for accidents every " + getSelectedInterval() + " seconds");
         } else {
             accidentGenTimer.stop();
             aiAnimationTimer.stop();
             aiScanProgress = 0;
             aiPhase = 0;
-            aiStatusLabel.setText("● STANDBY");
+            aiStatusLabel.setText("");
             aiStatusLabel.setForeground(UITheme.TEXT_MUTED);
-            aiLocationLabel.setText("Ready to scan...");
+            aiLocationLabel.setText("");
             aiThreatLabel.setText("");
             aiConfidenceLabel.setText("");
+            aiDetectionPanel.setVisible(false);
             aiDetectionPanel.repaint();
             notificationManager.showInfo("AI Stopped", "Detection paused");
         }
@@ -616,11 +617,11 @@ public class Main extends JFrame {
             pstmt.setString(5, "AI System");
             pstmt.executeUpdate();
 
-            String color = severity.equals("Critical") ? "🔴"
-                    : severity.equals("High") ? "🟠" : severity.equals("Medium") ? "🟡" : "🟢";
+            String tag = severity.equals("Critical") ? "[CRITICAL]"
+                    : severity.equals("High") ? "[HIGH]" : severity.equals("Medium") ? "[MEDIUM]" : "[LOW]";
 
-            notificationManager.showUrgent("🚨 NEW ACCIDENT DETECTED",
-                    color + " " + severity + " - " + location);
+            notificationManager.showUrgent("NEW ACCIDENT DETECTED",
+                    tag + " " + severity + " — " + location);
 
             refreshAllData();
             updateGoogleMaps();
@@ -648,8 +649,8 @@ public class Main extends JFrame {
 
             while (rs.next()) {
                 String severity = rs.getString("severity");
-                String icon = severity.equals("Critical") ? "🔴"
-                        : severity.equals("High") ? "🟠" : severity.equals("Medium") ? "🟡" : "🟢";
+                String icon = severity.equals("Critical") ? "●"
+                        : severity.equals("High") ? "●" : severity.equals("Medium") ? "●" : "●";
 
                 Object[] row = {
                         rs.getInt("accident_id"),
@@ -672,8 +673,8 @@ public class Main extends JFrame {
 
             while (rs.next()) {
                 String status = rs.getString("status");
-                String icon = status.equals("green") ? "🟢 Available"
-                        : status.equals("yellow") ? "🟡 Dispatched" : "🔴 At Scene";
+                String icon = status.equals("green") ? "Available"
+                        : status.equals("yellow") ? "Dispatched" : "At Scene";
 
                 Object[] row = {
                         rs.getInt("ambulance_id"),
@@ -725,7 +726,7 @@ public class Main extends JFrame {
             rs.next();
             int availAmbulances = rs.getInt("avail");
 
-            statsLabel.setText(String.format("📊 %d Accidents | %d Units Ready", totalAccidents, availAmbulances));
+            statsLabel.setText(String.format("%d Accidents  |  %d Units Ready", totalAccidents, availAmbulances));
         } catch (SQLException e) {
             System.err.println("[Main] Error updating stats: " + e.getMessage());
         }

@@ -41,7 +41,7 @@ public class AnalyticsDashboard extends JPanel {
         JPanel headerPanel = new JPanel(new BorderLayout());
         headerPanel.setOpaque(false);
 
-        JLabel titleLabel = UITheme.createTitleLabel("📊 Analytics Dashboard");
+        JLabel titleLabel = UITheme.createTitleLabel("Analytics Dashboard");
         headerPanel.add(titleLabel, BorderLayout.WEST);
 
         // Time filter
@@ -89,11 +89,12 @@ public class AnalyticsDashboard extends JPanel {
         statsPanel.setOpaque(false);
         statsPanel.setPreferredSize(new Dimension(0, 100));
 
-        statsPanel.add(createStatCard("Total Accidents", String.valueOf(totalAccidents), "🚨", UITheme.STATUS_CRITICAL));
-        statsPanel.add(createStatCard("Avg Response Time", avgResponseTime + " min", "⏱️", UITheme.ACCENT));
+        statsPanel.add(createStatCard("Total Accidents", String.valueOf(totalAccidents), "!", UITheme.STATUS_CRITICAL));
+        statsPanel.add(createStatCard("Avg Response Time", avgResponseTime + " min", "T", UITheme.ACCENT));
         statsPanel
-                .add(createStatCard("Active Ambulances", String.valueOf(activeAmbulances), "🚑", UITheme.STATUS_AVAILABLE));
-        statsPanel.add(createStatCard("Patients Today", String.valueOf(patientsToday), "🏥", UITheme.GRADIENT_END));
+                .add(createStatCard("Active Ambulances", String.valueOf(activeAmbulances), "A",
+                        UITheme.STATUS_AVAILABLE));
+        statsPanel.add(createStatCard("Patients Today", String.valueOf(patientsToday), "P", UITheme.GRADIENT_END));
 
         return statsPanel;
     }
@@ -434,5 +435,3 @@ public class AnalyticsDashboard extends JPanel {
         }
     }
 }
-
-

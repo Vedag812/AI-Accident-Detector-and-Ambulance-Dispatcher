@@ -32,7 +32,7 @@ public class CommunicationPanel extends JPanel {
         setBackground(UITheme.PANEL_BG);
 
         // Header
-        JLabel header = new JLabel("📨 Communication Center");
+        JLabel header = new JLabel("Communication Center");
         header.setFont(UITheme.FONT_HEADER);
         header.setForeground(UITheme.TEXT_PRIMARY);
         add(header, BorderLayout.NORTH);
@@ -82,7 +82,10 @@ public class CommunicationPanel extends JPanel {
         // Layout input panel
         JPanel controlPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
         controlPanel.setBackground(UITheme.PANEL_BG);
-        controlPanel.add(new JLabel("Priority:"));
+        JLabel priorityLabel = new JLabel("Priority:");
+        priorityLabel.setForeground(UITheme.TEXT_SECONDARY);
+        priorityLabel.setFont(UITheme.FONT_SMALL);
+        controlPanel.add(priorityLabel);
         controlPanel.add(prioritySelector);
         controlPanel.add(sendButton);
 
@@ -156,15 +159,15 @@ public class CommunicationPanel extends JPanel {
     private String getPriorityIcon(String priority) {
         switch (priority) {
             case "LOW":
-                return "ℹ️";
+                return "[LOW]";
             case "MEDIUM":
-                return "⚠️";
+                return "[MED]";
             case "HIGH":
-                return "🔴";
+                return "[HIGH]";
             case "URGENT":
-                return "🚨";
+                return "[URGENT]";
             default:
-                return "📌";
+                return "[-]";
         }
     }
 
@@ -193,4 +196,3 @@ public class CommunicationPanel extends JPanel {
         this.currentUserId = userId;
     }
 }
-

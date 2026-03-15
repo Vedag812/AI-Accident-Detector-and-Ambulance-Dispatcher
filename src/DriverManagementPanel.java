@@ -32,7 +32,7 @@ public class DriverManagementPanel extends JPanel {
         JPanel headerPanel = new JPanel(new BorderLayout());
         headerPanel.setOpaque(false);
 
-        JLabel titleLabel = UITheme.createTitleLabel("👨‍✈️ Driver Management");
+        JLabel titleLabel = UITheme.createTitleLabel("Driver Management");
         headerPanel.add(titleLabel, BorderLayout.WEST);
 
         JButton addDriverBtn = UITheme.createPrimaryButton("+ Add Driver");
@@ -60,11 +60,13 @@ public class DriverManagementPanel extends JPanel {
 
         statsPanel.add(createStatCard("Total Drivers", String.valueOf(stats.getOrDefault("total", 0)), UITheme.ACCENT));
         statsPanel.add(
-                createStatCard("Available", String.valueOf(stats.getOrDefault("available", 0)), UITheme.STATUS_AVAILABLE));
+                createStatCard("Available", String.valueOf(stats.getOrDefault("available", 0)),
+                        UITheme.STATUS_AVAILABLE));
         statsPanel.add(
                 createStatCard("On Duty", String.valueOf(stats.getOrDefault("on_duty", 0)), UITheme.STATUS_DISPATCHED));
         statsPanel
-                .add(createStatCard("On Leave", String.valueOf(stats.getOrDefault("on_leave", 0)), UITheme.STATUS_CRITICAL));
+                .add(createStatCard("On Leave", String.valueOf(stats.getOrDefault("on_leave", 0)),
+                        UITheme.STATUS_CRITICAL));
 
         return statsPanel;
     }
@@ -163,18 +165,18 @@ public class DriverManagementPanel extends JPanel {
 
     private String getStatusEmoji(String status) {
         if (status == null)
-            return "⚪";
+            return "○";
         switch (status) {
             case "available":
-                return "🟢";
+                return "●";
             case "on_duty":
-                return "🟡";
+                return "●";
             case "off_duty":
-                return "🔴";
+                return "●";
             case "on_leave":
-                return "🟣";
+                return "●";
             default:
-                return "⚪";
+                return "○";
         }
     }
 
@@ -316,5 +318,3 @@ public class DriverManagementPanel extends JPanel {
         }
     }
 }
-
-

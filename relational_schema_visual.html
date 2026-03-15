@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Relational Schema - AI Accident Detector & Ambulance Dispatcher</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #e8e8e8;
+            overflow: auto;
+        }
+
+        h1 {
+            text-align: center;
+            padding: 18px 0 6px;
+            font-size: 22px;
+            color: #1a1a2e;
+            letter-spacing: 0.5px;
+        }
+
+        .subtitle {
+            text-align: center;
+            font-size: 13px;
+            color: #555;
+            margin-bottom: 14px;
+        }
+
+        .canvas-wrapper {
+            display: flex;
+            justify-content: center;
+            padding: 0 20px 30px;
+        }
+
+        .canvas {
+            width: 1460px;
+            height: 920px;
+            background: #ffffff;
+            border: 2px solid #999;
+            position: relative;
+            box-shadow: 0 6px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        /* ───── Table Box Styles ───── */
+        .table-box {
+            position: absolute;
+            border: 2px solid #007b7b;
+            min-width: 195px;
+            font-size: 12.5px;
+            z-index: 2;
+            background: #fff;
+        }
+
+        .table-header {
+            background: linear-gradient(135deg, #b2ebf2, #80deea);
+            border-bottom: 2px solid #007b7b;
+            padding: 6px 10px;
+            text-align: center;
+            font-weight: 700;
+            font-size: 13.5px;
+            color: #004d4d;
+        }
+
+        .attrs {
+            background: #e0f7fa;
+            padding: 4px 0;
+        }
+
+        .attr {
+            padding: 2px 10px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .attr:hover {
+            background: #b2ebf288;
+        }
+
+        .pk {
+            font-weight: bold;
+            text-decoration: underline;
+            color: #004d4d;
+        }
+
+        .fk-tag {
+            font-size: 10px;
+            background: #a5d6a7;
+            color: #1b5e20;
+            padding: 0 4px;
+            border-radius: 3px;
+            font-weight: 600;
+        }
+
+        .pk-tag {
+            font-size: 10px;
+            background: #ffcc80;
+            color: #e65100;
+            padding: 0 4px;
+            border-radius: 3px;
+            font-weight: 600;
+        }
+
+        /* ───── SVG Relationship Lines ───── */
+        svg.lines {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        svg.lines line {
+            stroke: #00796b;
+            stroke-width: 2;
+        }
+
+        svg.lines text {
+            font-size: 10px;
+            fill: #004d40;
+            font-weight: 600;
+        }
+
+        /* Relationship diamond */
+        .rel-diamond {
+            fill: #fff;
+            stroke: #00796b;
+            stroke-width: 1.5;
+        }
+
+        /* Legend */
+        .legend {
+            position: absolute;
+            bottom: 12px;
+            right: 16px;
+            background: #f5f5f5;
+            border: 1px solid #bbb;
+            padding: 8px 12px;
+            font-size: 11px;
+            z-index: 3;
+            border-radius: 4px;
+        }
+
+        .legend-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin: 3px 0;
+        }
+
+        .legend-pk {
+            width: 14px;
+            height: 14px;
+            background: #ffcc80;
+            border-radius: 2px;
+        }
+
+        .legend-fk {
+            width: 14px;
+            height: 14px;
+            background: #a5d6a7;
+            border-radius: 2px;
+        }
+
+        .legend-line {
+            width: 22px;
+            height: 2px;
+            background: #00796b;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>Relational Schema &mdash; AI Accident Detector &amp; Ambulance Dispatcher</h1>
+    <p class="subtitle">Primary Keys (PK) are underlined &bull; Foreign Keys (FK) shown with green tags &bull; Lines
+        denote relationships</p>
+
+    <div class="canvas-wrapper">
+        <div class="canvas">
+
+            <!-- ═══════════ SVG RELATIONSHIP LINES ═══════════ -->
+            <svg class="lines">
+                <!-- USERS ──► AUDIT_LOGS  (user_id FK) -->
+                <line x1="215" y1="240" x2="215" y2="430" />
+                <circle cx="215" cy="430" r="4" fill="#00796b" />
+                <text x="220" y="340">1 : N</text>
+
+                <!-- USERS ──► MESSAGES  (sender_id / receiver_id FK) -->
+                <line x1="115" y1="240" x2="115" y2="620" />
+                <circle cx="115" cy="620" r="4" fill="#00796b" />
+                <text x="120" y="440">1 : N</text>
+
+                <!-- HOSPITALS ──► AMBULANCES  (assigned_hospital_id FK) -->
+                <line x1="655" y1="268" x2="655" y2="345" />
+                <circle cx="655" cy="345" r="4" fill="#00796b" />
+                <text x="660" y="310">1 : N</text>
+
+                <!-- HOSPITALS ──► HOSPITAL_STAFF  (hospital_id FK) -->
+                <line x1="745" y1="268" x2="920" y2="580" />
+                <circle cx="920" cy="580" r="4" fill="#00796b" />
+                <text x="840" y="420">1 : N</text>
+
+                <!-- HOSPITALS ──► EQUIPMENT_INVENTORY  (hospital_id FK) -->
+                <line x1="770" y1="268" x2="1160" y2="580" />
+                <circle cx="1160" cy="580" r="4" fill="#00796b" />
+                <text x="980" y="410">1 : N</text>
+
+                <!-- HOSPITALS ──► SURGERY_ROOMS  (hospital_id FK) -->
+                <line x1="790" y1="268" x2="1340" y2="580" />
+                <circle cx="1340" cy="580" r="4" fill="#00796b" />
+                <text x="1080" y="400">1 : N</text>
+
+                <!-- HOSPITALS ──► AMBULANCE_REQUESTS  (hospital_id FK) -->
+                <line x1="565" y1="268" x2="490" y2="580" />
+                <circle cx="490" cy="580" r="4" fill="#00796b" />
+                <text x="500" y="430">1 : N</text>
+
+                <!-- ACCIDENTS ──► AMBULANCE_REQUESTS  (accident_id FK) -->
+                <line x1="410" y1="240" x2="440" y2="580" />
+                <circle cx="440" cy="580" r="4" fill="#00796b" />
+                <text x="395" y="420">1 : N</text>
+
+                <!-- AMBULANCES ──► AMBULANCE_REQUESTS  (ambulance_id FK) -->
+                <line x1="590" y1="530" x2="530" y2="580" />
+                <circle cx="530" cy="580" r="4" fill="#00796b" />
+                <text x="545" y="560">1 : N</text>
+
+                <!-- ACCIDENTS ──► MESSAGES  (accident_id FK) -->
+                <line x1="320" y1="240" x2="235" y2="620" />
+                <circle cx="235" cy="620" r="4" fill="#00796b" />
+                <text x="255" y="440">1 : N</text>
+
+                <!-- ACCIDENTS ──► AMBULANCES  (assigned_accident_id FK) -->
+                <line x1="470" y1="195" x2="555" y2="345" />
+                <circle cx="555" cy="345" r="4" fill="#00796b" />
+                <text x="495" y="280">1 : N</text>
+            </svg>
+
+            <!-- ═══════════════ TABLE: USERS ═══════════════ -->
+            <div class="table-box" style="left:30px; top:50px; width:210px;">
+                <div class="table-header">Users</div>
+                <div class="attrs">
+                    <div class="attr"><span class="pk-tag">PK</span> <span class="pk">id</span></div>
+                    <div class="attr">username</div>
+                    <div class="attr">password</div>
+                    <div class="attr">role</div>
+                    <div class="attr">full_name</div>
+                    <div class="attr">email</div>
+                    <div class="attr">phone</div>
+                    <div class="attr">created_at</div>
+                </div>
+            </div>
+
+            <!-- ═══════════════ TABLE: ACCIDENTS ═══════════════ -->
+            <div class="table-box" style="left:280px; top:50px; width:210px;">
+                <div class="table-header">Accidents</div>
+                <div class="attrs">
+                    <div class="attr"><span class="pk-tag">PK</span> <span class="pk">accident_id</span></div>
+                    <div class="attr">location</div>
+                    <div class="attr">latitude</div>
+                    <div class="attr">longitude</div>
+                    <div class="attr">vehicle_id</div>
+                    <div class="attr">severity</div>
+                    <div class="attr">description</div>
+                    <div class="attr">reported_by</div>
+                    <div class="attr">weather_condition</div>
+                    <div class="attr">casualties</div>
+                    <div class="attr">status</div>
+                    <div class="attr">accident_time</div>
+                </div>
+            </div>
+
+            <!-- ═══════════════ TABLE: HOSPITALS ═══════════════ -->
+            <div class="table-box" style="left:555px; top:50px; width:230px;">
+                <div class="table-header">Hospitals</div>
+                <div class="attrs">
+                    <div class="attr"><span class="pk-tag">PK</span> <span class="pk">hospital_id</span></div>
+                    <div class="attr">name</div>
+                    <div class="attr">x</div>
+                    <div class="attr">y</div>
+                    <div class="attr">latitude</div>
+                    <div class="attr">longitude</div>
+                    <div class="attr">available_beds</div>
+                    <div class="attr">capacity</div>
+                    <div class="attr">max_severity</div>
+                    <div class="attr">contact_number</div>
+                    <div class="attr">address</div>
+                    <div class="attr">created_at</div>
+                </div>
+            </div>
+
+            <!-- ═══════════════ TABLE: AMBULANCES ═══════════════ -->
+            <div class="table-box" style="left:555px; top:345px; width:230px;">
+                <div class="table-header">Ambulances</div>
+                <div class="attrs">
+                    <div class="attr"><span class="pk-tag">PK</span> <span class="pk">ambulance_id</span></div>
+                    <div class="attr">vehicle_number</div>
+                    <div class="attr">current_x</div>
+                    <div class="attr">current_y</div>
+                    <div class="attr">latitude</div>
+                    <div class="attr">longitude</div>
+                    <div class="attr">status</div>
+                    <div class="attr"><span class="fk-tag">FK</span> assigned_accident_id</div>
+                    <div class="attr"><span class="fk-tag">FK</span> assigned_hospital_id</div>
+                    <div class="attr">driver_name</div>
+                    <div class="attr">driver_contact</div>
+                    <div class="attr">last_updated</div>
+                </div>
+            </div>
+
+            <!-- ═══════════════ TABLE: AUDIT_LOGS ═══════════════ -->
+            <div class="table-box" style="left:30px; top:430px; width:210px;">
+                <div class="table-header">Audit_Logs</div>
+                <div class="attrs">
+                    <div class="attr"><span class="pk-tag">PK</span> <span class="pk">log_id</span></div>
+                    <div class="attr"><span class="fk-tag">FK</span> user_id</div>
+                    <div class="attr">action</div>
+                    <div class="attr">details</div>
+                    <div class="attr">ip_address</div>
+                    <div class="attr">timestamp</div>
+                </div>
+            </div>
+
+            <!-- ═══════════════ TABLE: MESSAGES ═══════════════ -->
+            <div class="table-box" style="left:30px; top:620px; width:230px;">
+                <div class="table-header">Messages</div>
+                <div class="attrs">
+                    <div class="attr"><span class="pk-tag">PK</span> <span class="pk">message_id</span></div>
+                    <div class="attr"><span class="fk-tag">FK</span> sender_id</div>
+                    <div class="attr"><span class="fk-tag">FK</span> receiver_id</div>
+                    <div class="attr"><span class="fk-tag">FK</span> accident_id</div>
+                    <div class="attr">message_text</div>
+                    <div class="attr">priority</div>
+                    <div class="attr">is_read</div>
+                    <div class="attr">sent_at</div>
+                </div>
+            </div>
+
+            <!-- ═══════════════ TABLE: AMBULANCE_REQUESTS ═══════════════ -->
+            <div class="table-box" style="left:330px; top:580px; width:240px;">
+                <div class="table-header">Ambulance_Requests</div>
+                <div class="attrs">
+                    <div class="attr"><span class="pk-tag">PK</span> <span class="pk">request_id</span></div>
+                    <div class="attr"><span class="fk-tag">FK</span> accident_id</div>
+                    <div class="attr"><span class="fk-tag">FK</span> ambulance_id</div>
+                    <div class="attr"><span class="fk-tag">FK</span> hospital_id</div>
+                    <div class="attr">status</div>
+                    <div class="attr">estimated_time</div>
+                    <div class="attr">actual_time</div>
+                    <div class="attr">request_time</div>
+                    <div class="attr">pickup_time</div>
+                    <div class="attr">delivery_time</div>
+                    <div class="attr">route_data</div>
+                </div>
+            </div>
+
+            <!-- ═══════════════ TABLE: HOSPITAL_STAFF ═══════════════ -->
+            <div class="table-box" style="left:830px; top:580px; width:200px;">
+                <div class="table-header">Hospital_Staff</div>
+                <div class="attrs">
+                    <div class="attr"><span class="pk-tag">PK</span> <span class="pk">staff_id</span></div>
+                    <div class="attr"><span class="fk-tag">FK</span> hospital_id</div>
+                    <div class="attr">name</div>
+                    <div class="attr">role</div>
+                    <div class="attr">specialization</div>
+                    <div class="attr">contact</div>
+                    <div class="attr">shift</div>
+                    <div class="attr">availability</div>
+                </div>
+            </div>
+
+            <!-- ═══════════════ TABLE: EQUIPMENT_INVENTORY ═══════════════ -->
+            <div class="table-box" style="left:1060px; top:580px; width:210px;">
+                <div class="table-header">Equipment_Inventory</div>
+                <div class="attrs">
+                    <div class="attr"><span class="pk-tag">PK</span> <span class="pk">equipment_id</span></div>
+                    <div class="attr"><span class="fk-tag">FK</span> hospital_id</div>
+                    <div class="attr">item_name</div>
+                    <div class="attr">category</div>
+                    <div class="attr">quantity</div>
+                    <div class="attr">min_threshold</div>
+                    <div class="attr">status</div>
+                    <div class="attr">last_updated</div>
+                </div>
+            </div>
+
+            <!-- ═══════════════ TABLE: SURGERY_ROOMS ═══════════════ -->
+            <div class="table-box" style="left:1280px; top:580px; width:170px;">
+                <div class="table-header">Surgery_Rooms</div>
+                <div class="attrs">
+                    <div class="attr"><span class="pk-tag">PK</span> <span class="pk">room_id</span></div>
+                    <div class="attr"><span class="fk-tag">FK</span> hospital_id</div>
+                    <div class="attr">room_number</div>
+                    <div class="attr">status</div>
+                    <div class="attr">current_patient</div>
+                    <div class="attr">scheduled_until</div>
+                </div>
+            </div>
+
+            <!-- ═══════════════ LEGEND ═══════════════ -->
+            <div class="legend">
+                <div style="font-weight:700; margin-bottom:4px;">Legend</div>
+                <div class="legend-row">
+                    <div class="legend-pk"></div> <span>Primary Key (PK)</span>
+                </div>
+                <div class="legend-row">
+                    <div class="legend-fk"></div> <span>Foreign Key (FK)</span>
+                </div>
+                <div class="legend-row">
+                    <div class="legend-line"></div> <span>Relationship (1:N)</span>
+                </div>
+                <div class="legend-row"><span style="text-decoration:underline;font-weight:bold;">underlined</span>
+                    <span>= PK column</span></div>
+            </div>
+
+        </div><!-- /canvas -->
+    </div><!-- /canvas-wrapper -->
+
+</body>
+
+</html>

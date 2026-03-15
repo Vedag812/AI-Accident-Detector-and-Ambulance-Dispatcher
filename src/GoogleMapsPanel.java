@@ -34,7 +34,7 @@ public class GoogleMapsPanel extends JPanel {
         JPanel headerPanel = new JPanel(new BorderLayout());
         headerPanel.setOpaque(false);
 
-        JLabel titleLabel = new JLabel("🗺️ Google Maps - Live Tracking");
+        JLabel titleLabel = new JLabel("Google Maps — Live Tracking");
         titleLabel.setFont(UITheme.FONT_TITLE);
         titleLabel.setForeground(UITheme.TEXT_PRIMARY);
 
@@ -53,16 +53,16 @@ public class GoogleMapsPanel extends JPanel {
         logArea.setBackground(UITheme.CARD_BG);
         logArea.setForeground(UITheme.TEXT_SECONDARY);
         logArea.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
-        logArea.setText("📍 Map Integration Log\n" +
+        logArea.setText("Map Integration Log\n" +
                 "━━━━━━━━━━━━━━━━━━━━━━━━\n\n" +
                 "• HTML map file: accident_map.html\n" +
                 "• Open in browser to view interactive map\n" +
                 "• Auto-refresh: Every 3 seconds\n\n" +
                 "Legend:\n" +
-                "  🔴 Red Markers = Accidents\n" +
-                "  🔵 Blue Markers = Hospitals\n" +
-                "  🟢 Green Markers = Available Ambulances\n" +
-                "  🟡 Yellow Markers = Dispatched Ambulances\n\n");
+                "  Red Markers = Accidents\n" +
+                "  Blue Markers = Hospitals\n" +
+                "  Green Markers = Available Ambulances\n" +
+                "  Yellow Markers = Dispatched Ambulances\n\n");
 
         JScrollPane scrollPane = new JScrollPane(logArea);
         scrollPane.setBorder(BorderFactory.createLineBorder(UITheme.BORDER));
@@ -73,13 +73,13 @@ public class GoogleMapsPanel extends JPanel {
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 15, 0));
         buttonPanel.setOpaque(false);
 
-        JButton openBtn = createButton("🌐 Open in Browser", UITheme.ACCENT);
+        JButton openBtn = createButton("Open in Browser", UITheme.ACCENT);
         openBtn.addActionListener(e -> openMapInBrowser());
 
-        JButton refreshBtn = createButton("🔄 Force Refresh", UITheme.STATUS_AVAILABLE);
+        JButton refreshBtn = createButton("Force Refresh", UITheme.STATUS_AVAILABLE);
         refreshBtn.addActionListener(e -> {
             generateMapHTML();
-            log("🔄 Manual refresh triggered");
+            log("Manual refresh triggered");
         });
 
         buttonPanel.add(openBtn);
@@ -129,11 +129,9 @@ public class GoogleMapsPanel extends JPanel {
     }
 
     public void generateMapHTML() {
-        String apiKey = config.getGoogleMapsApiKey();
         StringBuilder accidentMarkers = new StringBuilder();
         StringBuilder hospitalMarkers = new StringBuilder();
         StringBuilder ambulanceMarkers = new StringBuilder();
-        StringBuilder routeLines = new StringBuilder();
 
         try {
             // Fetch accidents with GPS coordinates
@@ -148,13 +146,12 @@ public class GoogleMapsPanel extends JPanel {
 
                 String severity = rs.getString("severity");
                 String location = rs.getString("location").replace("'", "\\'");
-                String severityIcon = severity.equals("Critical") ? "red"
-                        : severity.equals("High") ? "orange" : severity.equals("Medium") ? "yellow" : "green";
+                String color = severity.equals("Critical") ? "#e11d48"
+                        : severity.equals("High") ? "#f59e0b" : severity.equals("Medium") ? "#eab308" : "#22c55e";
 
                 accidentMarkers.append(String.format(
-                        "new google.maps.Marker({position:{lat:%.6f,lng:%.6f},map:map," +
-                                "title:'%s - %s',icon:'http://maps.google.com/mapfiles/ms/icons/%s-dot.png'});\n",
-                        lat, lng, severity, location, severityIcon));
+                        "L.circleMarker([%.6f, %.6f], {radius: 10, fillColor: '%s', color: '#fff', weight: 2, opacity: 1, fillOpacity: 0.8}).addTo(map).bindPopup('<b>%s</b><br>%s');\n",
+                        lat, lng, color, severity + " Accident", location));
                 accCount++;
             }
 
@@ -171,15 +168,14 @@ public class GoogleMapsPanel extends JPanel {
                 int beds = rs.getInt("available_beds");
 
                 hospitalMarkers.append(String.format(
-                        "new google.maps.Marker({position:{lat:%.6f,lng:%.6f},map:map," +
-                                "title:'%s (Beds: %d)',icon:'http://maps.google.com/mapfiles/ms/icons/blue-dot.png'});\n",
+                        "L.marker([%.6f, %.6f], {icon: L.divIcon({className: 'hospital-marker', html: '🏥', iconSize: [30, 30]})}).addTo(map).bindPopup('<b>%s</b><br>Available Beds: %d');\n",
                         lat, lng, name, beds));
                 hospCount++;
             }
 
             // Fetch ambulances with GPS and status
             rs = dbManager.executeQuery(
-                    "SELECT a.ambulance_id, a.latitude, a.longitude, a.status, a.target_x, a.target_y, " +
+                    "SELECT a.ambulance_id, a.latitude, a.longitude, a.status, " +
                             "a.vehicle_number, d.name as driver_name FROM ambulances a " +
                             "LEFT JOIN drivers d ON a.driver_id = d.driver_id");
             int ambCount = 0;
@@ -195,83 +191,61 @@ public class GoogleMapsPanel extends JPanel {
                 if (driverName == null)
                     driverName = "Unassigned";
 
-                String icon = status.equals("green") ? "green" : status.equals("yellow") ? "yellow" : "red";
+                String color = status.equals("green") ? "#22c55e" : status.equals("yellow") ? "#f59e0b" : "#e11d48";
                 String statusText = status.equals("green") ? "Available"
                         : status.equals("yellow") ? "En Route" : "At Scene";
 
                 ambulanceMarkers.append(String.format(
-                        "var amb%d = new google.maps.Marker({position:{lat:%.6f,lng:%.6f},map:map," +
-                                "title:'%s | %s | %s',icon:'http://maps.google.com/mapfiles/ms/icons/%s-dot.png'," +
-                                "animation:google.maps.Animation.DROP});\n",
-                        rs.getInt("ambulance_id"), lat, lng, vehicleNum, statusText, driverName, icon));
-
-                // Add route line for dispatched ambulances
-                if (!status.equals("green")) {
-                    int targetX = rs.getInt("target_x");
-                    int targetY = rs.getInt("target_y");
-                    if (targetX > 0 && targetY > 0) {
-                        double targetLat = 13.0827 + (targetX - 200) * 0.0005;
-                        double targetLng = 80.2707 + (targetY - 200) * 0.0005;
-                        routeLines.append(String.format(
-                                "new google.maps.Polyline({path:[{lat:%.6f,lng:%.6f},{lat:%.6f,lng:%.6f}]," +
-                                        "geodesic:true,strokeColor:'%s',strokeOpacity:0.8,strokeWeight:3,map:map});\n",
-                                lat, lng, targetLat, targetLng,
-                                status.equals("yellow") ? "#F59E0B" : "#E11D48"));
-                    }
-                }
+                        "L.circleMarker([%.6f, %.6f], {radius: 8, fillColor: '%s', color: '#fff', weight: 2, opacity: 1, fillOpacity: 0.9}).addTo(map).bindPopup('<b>%s</b><br>Status: %s<br>Driver: %s');\n",
+                        lat, lng, color, vehicleNum, statusText, driverName));
                 ambCount++;
             }
 
-            log(String.format("📍 Updated: %d accidents, %d hospitals, %d ambulances", accCount, hospCount, ambCount));
+            log(String.format("Updated: %d accidents, %d hospitals, %d ambulances", accCount, hospCount, ambCount));
 
         } catch (SQLException e) {
-            log("❌ Error fetching data: " + e.getMessage());
+            log("Error fetching data: " + e.getMessage());
         }
 
         String html = "<!DOCTYPE html>\n" +
                 "<html><head><title>Accident Alert System - Live Map</title>\n" +
-                "<meta charset='utf-8'><meta http-equiv='refresh' content='3'>\n" +
+                "<meta charset='utf-8'><meta http-equiv='refresh' content='5'>\n" +
+                "<link rel='stylesheet' href='https://unpkg.com/leaflet@1.9.4/dist/leaflet.css'/>\n" +
+                "<script src='https://unpkg.com/leaflet@1.9.4/dist/leaflet.js'></script>\n" +
                 "<style>\n" +
-                "body{margin:0;font-family:'Segoe UI',sans-serif;background:#f8f9fa;}\n" +
+                "body{margin:0;font-family:'Segoe UI',sans-serif;}\n" +
                 "#map{height:100vh;width:100%;}\n" +
                 ".info{position:fixed;top:20px;left:20px;background:rgba(255,255,255,0.95);\n" +
-                "padding:20px;border-radius:12px;color:#0f172a;z-index:1000;box-shadow:0 4px 20px rgba(0,0,0,0.1);border:1px solid #e2e8f0;}\n"
+                "padding:20px;border-radius:12px;color:#0f172a;z-index:1000;box-shadow:0 4px 20px rgba(0,0,0,0.15);border:1px solid #e2e8f0;max-width:220px;}\n"
                 +
-                ".info h3{margin:0 0 15px 0;color:#2563eb;}\n" +
-                ".legend-item{display:flex;align-items:center;margin:8px 0;font-size:14px;}\n" +
+                ".info h3{margin:0 0 15px 0;color:#2563eb;font-size:16px;}\n" +
+                ".legend-item{display:flex;align-items:center;margin:8px 0;font-size:13px;}\n" +
                 ".legend-dot{width:12px;height:12px;border-radius:50%;margin-right:10px;}\n" +
-                ".stats{margin-top:15px;padding-top:15px;border-top:1px solid #e2e8f0;font-size:12px;color:#64748b;}\n"
+                ".stats{margin-top:15px;padding-top:15px;border-top:1px solid #e2e8f0;font-size:11px;color:#64748b;}\n"
                 +
+                ".hospital-marker{font-size:24px;text-shadow:0 2px 4px rgba(0,0,0,0.3);}\n" +
                 "</style></head><body>\n" +
                 "<div class='info'>\n" +
-                "<h3>🚑 AI Accident Detector</h3>\n" +
-                "<div class='legend-item'><div class='legend-dot' style='background:#e11d48'></div>Critical</div>\n" +
-                "<div class='legend-item'><div class='legend-dot' style='background:#f59e0b'></div>High Priority</div>\n"
+                "<h3>AI Accident Detector</h3>\n" +
+                "<div class='legend-item'><div class='legend-dot' style='background:#e11d48'></div>Critical/At Scene</div>\n"
                 +
-                "<div class='legend-item'><div class='legend-dot' style='background:#3b82f6'></div>Hospitals</div>\n" +
-                "<div class='legend-item'><div class='legend-dot' style='background:#10b981'></div>Available Ambulances</div>\n"
+                "<div class='legend-item'><div class='legend-dot' style='background:#f59e0b'></div>High/En Route</div>\n"
                 +
-                "<div class='legend-item'><div class='legend-dot' style='background:#f59e0b'></div>En Route</div>\n" +
-                "<div class='stats'>Live GPS Tracking | Updated: " +
+                "<div class='legend-item'><div class='legend-dot' style='background:#22c55e'></div>Available</div>\n" +
+                "<div class='legend-item'>H Hospitals</div>\n" +
+                "<div class='stats'>Live GPS Tracking<br>Updated: " +
                 new java.text.SimpleDateFormat("HH:mm:ss").format(new java.util.Date()) + "</div>\n" +
                 "</div>\n" +
                 "<div id='map'></div>\n" +
                 "<script>\n" +
-                "function initMap(){\n" +
-                "var map=new google.maps.Map(document.getElementById('map'),{\n" +
-                "zoom:13,center:{lat:13.0827,lng:80.2707},\n" +
-                "styles:[{featureType:'water',stylers:[{color:'#e9e9e9'}]}," +
-                "{featureType:'landscape',stylers:[{color:'#f5f5f5'}]}," +
-                "{featureType:'road',stylers:[{visibility:'on'}]}]" +
-                "});\n" +
+                "var map = L.map('map').setView([13.0827, 80.2707], 12);\n" +
+                "L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {\n" +
+                "    attribution: '© OpenStreetMap contributors'\n" +
+                "}).addTo(map);\n" +
                 accidentMarkers.toString() +
                 hospitalMarkers.toString() +
                 ambulanceMarkers.toString() +
-                routeLines.toString() +
-                "}\n" +
                 "</script>\n" +
-                "<script async defer src='https://maps.googleapis.com/maps/api/js?key=" + apiKey
-                + "&callback=initMap'></script>\n" +
                 "</body></html>";
 
         try {
@@ -280,7 +254,7 @@ public class GoogleMapsPanel extends JPanel {
             writer.write(html);
             writer.close();
         } catch (IOException e) {
-            log("❌ Error writing HTML: " + e.getMessage());
+            log("Error writing HTML: " + e.getMessage());
         }
     }
 
@@ -289,10 +263,10 @@ public class GoogleMapsPanel extends JPanel {
             File htmlFile = new File("accident_map.html");
             if (htmlFile.exists()) {
                 Desktop.getDesktop().browse(htmlFile.toURI());
-                log("🌐 Opened map in browser");
+                log("Opened map in browser");
             }
         } catch (Exception e) {
-            log("❌ Error opening browser: " + e.getMessage());
+            log("Error opening browser: " + e.getMessage());
         }
     }
 
@@ -306,5 +280,3 @@ public class GoogleMapsPanel extends JPanel {
         }
     }
 }
-
-
