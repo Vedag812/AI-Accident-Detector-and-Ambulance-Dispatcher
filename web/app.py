@@ -61,6 +61,21 @@ app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', secrets.token_hex(32))
 app.permanent_session_lifetime = timedelta(hours=8)
 
+# ─── Auto-init PostgreSQL tables on startup ────────────────────────────
+if DATABASE_URL:
+    try:
+        _conn = pg_pool.getconn()
+        _cur = _conn.cursor()
+        sql_path = os.path.join(os.path.dirname(__file__), 'init_pg.sql')
+        with open(sql_path, 'r') as f:
+            _cur.execute(f.read())
+        _conn.commit()
+        _cur.close()
+        pg_pool.putconn(_conn)
+        print("[Flask] PostgreSQL tables initialized")
+    except Exception as e:
+        print(f"[Flask] DB init note: {e}")
+
 # ─── Chennai Ambulance Base Stations ───────────────────────────────────
 CHENNAI_AMBULANCE_POSITIONS = [
     (13.0827, 80.2707, 'Central Chennai'),
