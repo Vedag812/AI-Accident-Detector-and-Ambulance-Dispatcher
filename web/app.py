@@ -12,7 +12,7 @@ if DATABASE_URL:
     import psycopg2
     import psycopg2.pool
     import psycopg2.extras
-    pg_pool = psycopg2.pool.SimpleConnectionPool(1, 3, DATABASE_URL)
+    pg_pool = psycopg2.pool.SimpleConnectionPool(1, 10, DATABASE_URL)
     print("[Flask] PostgreSQL pool created (Render)")
 
     class PgConnWrapper:
@@ -26,13 +26,22 @@ if DATABASE_URL:
         def commit(self):
             self._conn.commit()
         def close(self):
-            pg_pool.putconn(self._conn)
+            try:
+                self._conn.rollback()  # clear any uncommitted state
+            except:
+                pass
+            try:
+                pg_pool.putconn(self._conn)
+            except:
+                pass
         @property
         def lastrowid(self):
-            return None  # handled via RETURNING
+            return None
 
     def get_db():
-        return PgConnWrapper(pg_pool.getconn())
+        conn = pg_pool.getconn()
+        conn.autocommit = False
+        return PgConnWrapper(conn)
 else:
     # ── MySQL (local development) ──
     import mysql.connector
@@ -60,6 +69,22 @@ else:
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', secrets.token_hex(32))
 app.permanent_session_lifetime = timedelta(hours=8)
+
+# ─── Custom JSON encoder for PostgreSQL types ─────────────────────────
+from decimal import Decimal
+class CustomEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, Decimal):
+            return float(obj)
+        if isinstance(obj, datetime):
+            return obj.strftime('%Y-%m-%d %H:%M:%S')
+        if isinstance(obj, timedelta):
+            return str(obj)
+        if hasattr(obj, 'isoformat'):
+            return obj.isoformat()
+        return super().default(obj)
+app.json_encoder = CustomEncoder
+app.json.ensure_ascii = False
 
 # ─── Auto-init PostgreSQL tables on startup ────────────────────────────
 if DATABASE_URL:
