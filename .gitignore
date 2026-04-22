@@ -33,3 +33,20 @@ config.properties
 src/config.properties
 bin/
 *.class
+
+### Documents & Reports (DO NOT PUSH) ###
+*.doc
+*.docx
+*.pdf
+*.zip
+*.md
+!README.md
+*.txt
+!requirements.txt
+*.py
+!web/app.py
+!web/build.sh
+!web/init_pg.sql
+~$*
+__pycache__/
+*.pyc
