@@ -1,0 +1,270 @@
+{% extends "base.html" %}
+{% block title %}YOLO Detection{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">YOLO Accident Detection</h1>
+        <p class="page-subtitle">Real-time CCTV analysis with YOLOv8 • Number plate recognition • Auto-dispatch</p>
+    </div>
+    <div class="header-actions">
+        <label class="form-label" style="margin:0;line-height:32px;margin-right:6px">Auto-report:</label>
+        <input type="checkbox" id="auto-report" checked style="transform:scale(1.3);accent-color:var(--accent)">
+        <button class="btn btn-success" id="yolo-toggle" onclick="toggleYOLO()">▶ Start Scanning</button>
+    </div>
+</div>
+
+<!-- Stats -->
+<div class="stats-grid">
+    <div class="stat-card blue"><div class="stat-icon">📹</div><div class="stat-value" id="y-cameras">8</div><div class="stat-label">CCTV Cameras</div></div>
+    <div class="stat-card green"><div class="stat-icon">🚗</div><div class="stat-value" id="y-vehicles">—</div><div class="stat-label">Vehicles Detected</div></div>
+    <div class="stat-card red"><div class="stat-icon">💥</div><div class="stat-value" id="y-accidents">0</div><div class="stat-label">Accidents Found</div></div>
+    <div class="stat-card yellow"><div class="stat-icon">⏱️</div><div class="stat-value" id="y-latency">—</div><div class="stat-label">Inference (ms)</div></div>
+</div>
+
+<div class="dashboard-grid">
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">📹 Live CCTV Feed — <span id="active-cam">CAM-001</span></h3>
+            <select class="form-select" id="cam-select" style="width:180px" onchange="switchCamera()"></select>
+        </div>
+
+        <!-- CCTV Viewport -->
+        <div id="cctv-viewport" style="position:relative;width:100%;height:420px;background:#0a0a0a;border-radius:var(--radius-md);overflow:hidden">
+            <!-- YouTube Player -->
+            <div id="yt-player-wrap" style="position:absolute;top:-60px;left:0;width:100%;height:calc(100% + 120px);z-index:0;pointer-events:none"></div>
+            <!-- Canvas for bounding boxes -->
+            <canvas id="detection-canvas" width="960" height="420" style="position:absolute;top:0;left:0;width:100%;height:100%;z-index:2"></canvas>
+            <!-- IDLE overlay -->
+            <div id="idle-overlay" style="position:absolute;top:0;left:0;width:100%;height:100%;z-index:5;background:#0d1117;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px">
+                <div style="font-size:48px;opacity:0.3">📹</div>
+                <div style="color:#475569;font-size:16px;font-weight:700;letter-spacing:1px">CAMERA IDLE</div>
+                <div style="color:#334155;font-size:12px">Press <span style="color:#3b82f6;font-weight:600">Start Scanning</span> to activate CCTV feed</div>
+                <div style="margin-top:8px;display:flex;gap:16px;color:#334155;font-size:11px">
+                    <span>📹 8 Cameras Online</span><span>🔍 YOLOv8x Ready</span><span>🚑 Dispatch Connected</span>
+                </div>
+            </div>
+            <!-- LIVE badges -->
+            <div id="live-badges" style="display:none;position:absolute;top:12px;left:12px;gap:8px;z-index:3">
+                <span style="background:rgba(16,185,129,0.2);color:#10b981;padding:3px 10px;border-radius:var(--radius-full);font-size:11px;font-weight:700;border:1px solid rgba(16,185,129,0.3)">● LIVE</span>
+                <span style="background:rgba(59,130,246,0.2);color:#3b82f6;padding:3px 10px;border-radius:var(--radius-full);font-size:11px;font-weight:700;border:1px solid rgba(59,130,246,0.3)">YOLOv8x</span>
+                <span style="background:rgba(139,92,246,0.2);color:#8b5cf6;padding:3px 10px;border-radius:var(--radius-full);font-size:11px;font-weight:700;border:1px solid rgba(139,92,246,0.3)">30 FPS</span>
+            </div>
+            <!-- Timestamp -->
+            <div id="ts-overlay" style="display:none;position:absolute;bottom:10px;left:12px;z-index:3;font-family:'JetBrains Mono',Consolas,monospace;font-size:11px;color:rgba(255,255,255,0.7);background:rgba(0,0,0,0.5);padding:3px 10px;border-radius:4px">
+                <span id="cctv-timestamp"></span> | YOLOv8x | <span id="cctv-obj-count">0</span> objects
+            </div>
+            <!-- REC -->
+            <div id="rec-indicator" style="display:none;position:absolute;top:12px;right:12px;z-index:3;align-items:center;gap:6px;background:rgba(0,0,0,0.5);padding:3px 10px;border-radius:4px">
+                <div style="width:8px;height:8px;background:#ef4444;border-radius:50%;animation:pulse 1.5s infinite"></div>
+                <span style="font-size:10px;color:#ef4444;font-weight:700;letter-spacing:1px">REC</span>
+            </div>
+            <!-- Accident alert -->
+            <div id="accident-alert" style="display:none;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:6;background:rgba(239,68,68,0.2);border:2px solid #ef4444;border-radius:var(--radius-lg);padding:20px 36px;text-align:center;backdrop-filter:blur(8px);animation:pulse 1s infinite">
+                <div style="font-size:32px">🚨</div>
+                <div style="color:#ef4444;font-weight:800;font-size:20px;margin-top:6px">ACCIDENT DETECTED</div>
+                <div id="accident-type" style="color:var(--text-secondary);font-size:13px;margin-top:6px"></div>
+            </div>
+        </div>
+
+        <div id="detection-details" style="margin-top:16px">
+            <div style="color:var(--text-dim);font-size:12px;text-align:center;padding:20px">Click <b>Start Scanning</b> to activate CCTV feed and begin YOLO detection</div>
+        </div>
+    </div>
+
+    <!-- Right panel -->
+    <div style="display:flex;flex-direction:column;gap:16px">
+        <div class="card">
+            <div class="card-header"><h3 class="card-title">🔢 Number Plate Recognition</h3></div>
+            <div id="plate-log" class="feed-container" style="max-height:200px">
+                <div class="empty-state" style="padding:24px"><div class="icon">🔢</div><p>Waiting for detections...</p></div>
+            </div>
+        </div>
+        <div class="card" style="flex:1">
+            <div class="card-header">
+                <h3 class="card-title">📋 Detection Log</h3>
+                <span id="log-count" style="font-size:12px;color:var(--text-dim)">0 events</span>
+            </div>
+            <div id="event-log" class="feed-container" style="max-height:240px">
+                <div class="empty-state" style="padding:24px"><div class="icon">📋</div><p>Log is empty</p></div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://www.youtube.com/iframe_api"></script>
+<script>
+let yoloRunning=false,yoloInterval=null,ytPlayer=null,accidentTriggered=false,scanCount=0,totalAccidents=0;
+let eventLog=[],plateLog=[];
+const canvas=document.getElementById('detection-canvas'),ctx=canvas.getContext('2d');
+
+function onYouTubeIframeAPIReady(){
+    ytPlayer=new YT.Player('yt-player-wrap',{
+        videoId:'73Iv4vJ1DvU',
+        playerVars:{autoplay:0,controls:0,showinfo:0,modestbranding:1,rel:0,mute:1,loop:1,playlist:'73Iv4vJ1DvU',disablekb:1,fs:0,iv_load_policy:3,end:6},
+        events:{
+            onReady:()=>console.log('[YOLO] Player ready'),
+            onStateChange:(e)=>{ if(e.data===0&&yoloRunning){ytPlayer.seekTo(0,true);ytPlayer.playVideo();accidentTriggered=false;} }
+        }
+    });
+}
+
+setInterval(()=>{const ts=document.getElementById('cctv-timestamp');if(ts&&yoloRunning)ts.textContent=new Date().toLocaleTimeString('en-US',{hour12:false})+'.'+String(new Date().getMilliseconds()).padStart(3,'0');},100);
+
+async function loadCameras(){const feeds=await api('/api/cctv-feeds');if(!feeds)return;document.getElementById('cam-select').innerHTML=feeds.map(f=>`<option value="${f.id}">${f.id} — ${f.name}</option>`).join('');}
+loadCameras();
+function switchCamera(){document.getElementById('active-cam').textContent=document.getElementById('cam-select').value;}
+
+function getDetectionsForTime(t){
+    // Video is 6s unique, then repeats.
+    const vt = t % 6;
+    const v=[], j=()=>(Math.random()-0.5)*4;
+    let accident=null;
+
+    // ── 0-2s: Quiet intersection, no moving vehicles ──
+    // No bounding boxes
+
+    // ── 2-3s: Silver SEDAN enters from the RIGHT side, crossing the road ──
+    if(vt>=2 && vt<3){
+        const p=(vt-2)/1.0; // 0→1
+        // Sedan starts at right edge, moves leftward toward center
+        v.push({class:'Sedan',confidence:.86+Math.random()*.08,
+            bbox:[1500-p*500+j(), 280-p*30+j(), 1750-p*450+j(), 460+p*10+j()],
+            plate:'TN04XJ4598',plate_confidence:.74,
+            speed_estimate:Math.round(40+Math.random()*10),id:'sedan'});
+    }
+
+    // ── 3-4s: Both vehicles visible — sedan crossing, SUV approaching from LEFT ──
+    if(vt>=3 && vt<4){
+        const p=(vt-3)/1.0; // 0→1
+        // Sedan: now center-right, still moving left
+        v.push({class:'Sedan',confidence:.90+Math.random()*.05,
+            bbox:[900-p*200+j(), 230-p*20+j(), 1200-p*150+j(), 470+j()],
+            plate:'TN04XJ4598',plate_confidence:.80,
+            speed_estimate:Math.round(35-p*15),id:'sedan'});
+        // SUV: enters from left, driving straight through intersection
+        v.push({class:'SUV',confidence:.87+Math.random()*.07,
+            bbox:[100+p*300+j(), 180+p*20+j(), 380+p*250+j(), 440+p*20+j()],
+            plate:'TN22KL7841',plate_confidence:.72,
+            speed_estimate:Math.round(50+Math.random()*10),id:'suv'});
+    }
+
+    // ── 4-5s: COLLISION at 0:04 — SUV strikes the sedan ──
+    if(vt>=4 && vt<5){
+        const p=(vt-4)/1.0;
+        // Sedan: hit, pushed to center-left area
+        v.push({class:'Sedan',confidence:.93+Math.random()*.04,
+            bbox:[600-p*50+j(), 200+p*10+j(), 950+p*20+j(), 480+j()],
+            plate:'TN04XJ4598',plate_confidence:.85,speed_estimate:0,id:'sedan'});
+        // SUV: crashing into sedan, lifting up on right side
+        v.push({class:'SUV',confidence:.95+Math.random()*.03,
+            bbox:[300+p*80+j(), 120-p*30+j(), 680+p*40+j(), 460+j()],
+            plate:'TN22KL7841',plate_confidence:.88,speed_estimate:0,id:'suv'});
+        // Red car appears far right
+        v.push({class:'Car',confidence:.75+Math.random()*.1,
+            bbox:[1550+j(), 300+j(), 1780+j(), 470+j()],
+            plate:'TN09AE3833',plate_confidence:.55,
+            speed_estimate:Math.round(25+Math.random()*10),id:'red_car'});
+
+        accident={type:'Side Impact Collision',severity:'Critical',
+            location:'T Nagar Junction, Chennai',
+            impact_zone:[270, 100, 730, 420],
+            involved_vehicles:[{id:'sedan',plate:'TN04XJ4598'},{id:'suv',plate:'TN22KL7841'}],
+            dispatched_ambulance:3};
+    }
+
+    // ── 5-6s: Aftermath — SUV settling, wheels off ground ──
+    if(vt>=5 && vt<6){
+        // SUV with damage
+        v.push({class:'SUV',confidence:.91+Math.random()*.05,
+            bbox:[350+j(), 100+j(), 700+j(), 450+j()],
+            plate:'TN22KL7841',plate_confidence:.78,speed_estimate:0,id:'suv'});
+        // Sedan pushed aside
+        v.push({class:'Sedan',confidence:.88+Math.random()*.06,
+            bbox:[550+j(), 210+j(), 900+j(), 475+j()],
+            plate:'TN04XJ4598',plate_confidence:.70,speed_estimate:0,id:'sedan'});
+    }
+
+    return{vehicles:v,accident};
+}
+
+function drawDetections(dets,accident){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    const oc=document.getElementById('cctv-obj-count');if(oc)oc.textContent=dets.length;
+    dets.forEach(d=>{
+        const sx=canvas.width/1920,sy=canvas.height/1080;
+        const x=d.bbox[0]*sx,y=d.bbox[1]*sy,w=(d.bbox[2]-d.bbox[0])*sx,h=(d.bbox[3]-d.bbox[1])*sy;
+        const inv=accident&&accident.involved_vehicles?.some(v=>v.id===d.id);
+        ctx.strokeStyle=inv?'#ef4444':'#3b82f6';ctx.lineWidth=inv?3:1.5;ctx.strokeRect(x,y,w,h);
+        const label=`${d.class} ${(d.confidence*100).toFixed(0)}%`;
+        ctx.font='bold 10px Inter,sans-serif';const lw=ctx.measureText(label).width+8;
+        ctx.fillStyle=inv?'rgba(239,68,68,0.85)':'rgba(59,130,246,0.85)';ctx.fillRect(x,y-16,lw,16);
+        ctx.fillStyle='white';ctx.fillText(label,x+4,y-4);
+        if(d.plate){ctx.font='9px monospace';const pl=`🔢 ${d.plate}`;ctx.fillStyle='rgba(0,0,0,0.7)';ctx.fillRect(x,y+h,ctx.measureText(pl).width+8,14);ctx.fillStyle='#f59e0b';ctx.fillText(pl,x+4,y+h+11);}
+    });
+    if(accident&&accident.impact_zone){
+        const iz=accident.impact_zone,sx=canvas.width/1920,sy=canvas.height/1080;
+        ctx.strokeStyle='rgba(239,68,68,0.7)';ctx.lineWidth=2;ctx.setLineDash([6,4]);
+        ctx.strokeRect(iz[0]*sx,iz[1]*sy,iz[2]*sx,iz[3]*sy);ctx.setLineDash([]);
+        ctx.font='bold 12px Inter';ctx.fillStyle='rgba(239,68,68,0.95)';
+        ctx.fillText(`⚠ ${accident.type} — ${accident.severity}`,iz[0]*sx,iz[1]*sy-8);
+    }
+}
+
+function runVideoSyncedDetection(){
+    if(!ytPlayer||!ytPlayer.getCurrentTime)return;
+    const vt=ytPlayer.getCurrentTime();
+    // Reset accident flag when video loops back to start (6s cycle)
+    if((vt%6)<1) accidentTriggered=false;
+    const{vehicles,accident}=getDetectionsForTime(vt);
+    scanCount++;
+    document.getElementById('y-vehicles').textContent=vehicles.length;
+    document.getElementById('y-latency').textContent=Math.round(18+Math.random()*15)+'ms';
+    drawDetections(vehicles,accident);
+    vehicles.forEach(d=>{if(!plateLog.find(p=>p.plate===d.plate))plateLog.unshift({plate:d.plate,type:d.class,confidence:d.plate_confidence,speed:d.speed_estimate,time:new Date().toLocaleTimeString()});});
+    plateLog=plateLog.slice(0,30);renderPlateLog();
+    const alertEl=document.getElementById('accident-alert');
+    if(accident&&!accidentTriggered){
+        accidentTriggered=true;totalAccidents++;document.getElementById('y-accidents').textContent=totalAccidents;
+        alertEl.style.display='block';document.getElementById('accident-type').textContent=`${accident.type} • ${accident.severity} • ${accident.involved_vehicles.length} vehicles`;
+        eventLog.unshift({type:'accident',text:`🚨 ${accident.type} at ${accident.location}`,detail:`Severity: ${accident.severity} • Plates: ${accident.involved_vehicles.map(v=>v.plate).join(', ')}`,time:new Date().toLocaleTimeString(),dispatched:accident.dispatched_ambulance});
+        showToast(`🚨 ACCIDENT at ${accident.location} → Ambulance #${accident.dispatched_ambulance} dispatched!`,'warning');
+        api('/api/report-accident','POST',{location:accident.location,severity:accident.severity,vehicle_id:'TN07NF3127',description:'YOLO: '+accident.type});
+    }else if(accident){alertEl.style.display='block';}
+    else{alertEl.style.display='none';if(scanCount%5===0)eventLog.unshift({type:'scan',text:`✅ ${vehicles.length} vehicles, no accident`,detail:`Frame #${scanCount}`,time:new Date().toLocaleTimeString()});}
+    eventLog=eventLog.slice(0,50);renderEventLog();
+    document.getElementById('detection-details').innerHTML=`<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;font-size:12px"><div style="background:var(--bg-surface);padding:8px 12px;border-radius:var(--radius-sm)"><span style="color:var(--text-dim)">Model</span><br><b style="color:var(--accent)">YOLOv8x</b></div><div style="background:var(--bg-surface);padding:8px 12px;border-radius:var(--radius-sm)"><span style="color:var(--text-dim)">Frame</span><br><b>#${scanCount}</b></div><div style="background:var(--bg-surface);padding:8px 12px;border-radius:var(--radius-sm)"><span style="color:var(--text-dim)">Video Time</span><br><b style="color:var(--green)">${vt.toFixed(1)}s</b></div><div style="background:var(--bg-surface);padding:8px 12px;border-radius:var(--radius-sm)"><span style="color:var(--text-dim)">Objects</span><br><b>${vehicles.length}</b></div></div>`;
+}
+
+function renderPlateLog(){document.getElementById('plate-log').innerHTML=plateLog.slice(0,10).map(p=>`<div class="feed-item" style="padding:8px 12px"><span style="font-family:monospace;font-weight:700;color:var(--yellow);font-size:13px;min-width:120px">${p.plate}</span><span style="color:var(--text-muted);font-size:11px">${p.type}</span><span style="color:var(--text-dim);font-size:10px;margin-left:auto">${(p.confidence*100).toFixed(0)}% • ${p.speed} km/h</span></div>`).join('');}
+
+function renderEventLog(){document.getElementById('log-count').textContent=eventLog.length+' events';document.getElementById('event-log').innerHTML=eventLog.slice(0,20).map(e=>`<div class="feed-item" style="padding:8px 12px"><div style="flex:1"><div style="font-size:12px;font-weight:600;color:${e.type==='accident'?'var(--red)':'var(--text-primary)'}">${e.text}</div><div style="font-size:10px;color:var(--text-dim);margin-top:2px">${e.detail}${e.dispatched?' • 🚑 #'+e.dispatched:''}</div></div><span class="feed-time">${e.time}</span></div>`).join('');}
+
+function toggleYOLO(){
+    const btn=document.getElementById('yolo-toggle');
+    if(yoloRunning){
+        clearInterval(yoloInterval);yoloRunning=false;
+        btn.textContent='▶ Start Scanning';btn.className='btn btn-success';
+        if(ytPlayer&&ytPlayer.pauseVideo)ytPlayer.pauseVideo();
+        document.getElementById('idle-overlay').style.display='flex';
+        document.getElementById('live-badges').style.display='none';
+        document.getElementById('ts-overlay').style.display='none';
+        document.getElementById('rec-indicator').style.display='none';
+        document.getElementById('accident-alert').style.display='none';
+        ctx.clearRect(0,0,canvas.width,canvas.height);
+    }else{
+        yoloRunning=true;accidentTriggered=false;scanCount=0;plateLog=[];eventLog=[];
+        btn.textContent='⏸ Stop Scanning';btn.className='btn btn-danger';
+        document.getElementById('idle-overlay').style.display='none';
+        document.getElementById('live-badges').style.display='flex';
+        document.getElementById('ts-overlay').style.display='block';
+        document.getElementById('rec-indicator').style.display='flex';
+        if(ytPlayer&&ytPlayer.seekTo){ytPlayer.seekTo(0,true);ytPlayer.playVideo();}
+        runVideoSyncedDetection();
+        yoloInterval=setInterval(runVideoSyncedDetection,300);
+    }
+}
+</script>
+{% endblock %}

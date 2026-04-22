@@ -474,6 +474,7 @@ public class Main extends JFrame {
         primaryRow.add(createActionButton("Fleet", UITheme.ACCENT_PURPLE, e -> showFleetManagement()));
         primaryRow.add(createActionButton("Drivers", UITheme.ACCENT_PURPLE, e -> showDriverManagement()));
         primaryRow.add(createActionButton("Reports", UITheme.ACCENT_PURPLE, e -> showIncidentReports()));
+        primaryRow.add(createActionButton("SQL Lab", UITheme.STATUS_ENROUTE, e -> showSQLOperations()));
         primaryRow.add(createActionButton("Messages", UITheme.ACCENT, e -> showCommunicationPanel()));
         primaryRow.add(createActionButton("Refresh", UITheme.TEXT_SECONDARY, e -> refreshAllData()));
         primaryRow.add(createActionButton("Logout", UITheme.TEXT_SECONDARY, e -> logout()));
@@ -520,6 +521,14 @@ public class Main extends JFrame {
         frame.setSize(1100, 700);
         frame.setLocationRelativeTo(this);
         frame.add(new IncidentReportPanel());
+        frame.setVisible(true);
+    }
+
+    private void showSQLOperations() {
+        JFrame frame = new JFrame("SQL Operations Lab");
+        frame.setSize(1250, 800);
+        frame.setLocationRelativeTo(this);
+        frame.add(new SQLOperationsPanel());
         frame.setVisible(true);
     }
 

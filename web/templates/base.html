@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Dashboard{% endblock %} — AI Accident Detector</title>
+    <meta name="description" content="AI-powered accident detection and ambulance dispatch system">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+    {% block head %}{% endblock %}
+</head>
+<body>
+    {% block body %}
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-logo">
+                    <div class="sidebar-logo-icon">🚨</div>
+                    <div class="sidebar-logo-text">
+                        <h1>Accident Detector</h1>
+                        <p>Command Center</p>
+                    </div>
+                </div>
+            </div>
+
+            <nav class="sidebar-nav">
+                <div class="nav-label">Main</div>
+                <a href="{{ url_for('dashboard') }}" class="nav-link {% if request.path == '/dashboard' %}active{% endif %}" id="nav-dashboard">
+                    <span class="nav-icon">📊</span>
+                    <span>Dashboard</span>
+                    <span class="nav-badge" id="accident-badge" style="display:none">0</span>
+                </a>
+                <a href="{{ url_for('hospitals') }}" class="nav-link {% if request.path == '/hospitals' %}active{% endif %}">
+                    <span class="nav-icon">🏥</span>
+                    <span>Hospitals</span>
+                </a>
+                <a href="{{ url_for('fleet') }}" class="nav-link {% if request.path == '/fleet' %}active{% endif %}">
+                    <span class="nav-icon">🚑</span>
+                    <span>Fleet</span>
+                </a>
+
+                <div class="nav-label">AI & Detection</div>
+                <a href="{{ url_for('yolo') }}" class="nav-link {% if request.path == '/yolo' %}active{% endif %}">
+                    <span class="nav-icon">🎯</span>
+                    <span>YOLO Detection</span>
+                </a>
+                <a href="{{ url_for('traffic') }}" class="nav-link {% if request.path == '/traffic' %}active{% endif %}">
+                    <span class="nav-icon">🚦</span>
+                    <span>Traffic Control</span>
+                </a>
+
+                <div class="nav-label">Analysis</div>
+                <a href="{{ url_for('analytics') }}" class="nav-link {% if request.path == '/analytics' %}active{% endif %}">
+                    <span class="nav-icon">📈</span>
+                    <span>Analytics</span>
+                </a>
+                <a href="{{ url_for('sql_lab') }}" class="nav-link {% if request.path == '/sql-lab' %}active{% endif %}">
+                    <span class="nav-icon">🧪</span>
+                    <span>SQL Lab</span>
+                </a>
+                <a href="{{ url_for('normalization') }}" class="nav-link {% if request.path == '/normalization' %}active{% endif %}">
+                    <span class="nav-icon">📐</span>
+                    <span>Normalization</span>
+                </a>
+                <a href="{{ url_for('transactions') }}" class="nav-link {% if request.path == '/transactions' %}active{% endif %}">
+                    <span class="nav-icon">🔒</span>
+                    <span>Transactions</span>
+                </a>
+                <a href="{{ url_for('concurrency') }}" class="nav-link {% if request.path == '/concurrency' %}active{% endif %}">
+                    <span class="nav-icon">🔐</span>
+                    <span>Concurrency</span>
+                </a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <a href="{{ url_for('logout') }}" class="user-menu" title="Logout">
+                    <div class="user-avatar">{{ session.get('username', 'U')[0]|upper }}</div>
+                    <div class="user-info">
+                        <div class="user-name">{{ session.get('full_name', session.get('username', 'User')) }}</div>
+                        <div class="user-role">{{ session.get('role', 'USER') }}</div>
+                    </div>
+                    <span style="color:var(--text-dim);font-size:16px;">⏻</span>
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+
+    <!-- Toast container -->
+    <div class="toast-container" id="toast-container"></div>
+    {% endblock %}
+
+    <script src="{{ url_for('static', filename='js/common.js') }}"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

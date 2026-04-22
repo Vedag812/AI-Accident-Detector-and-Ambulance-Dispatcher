@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% block title %}Analytics{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Analytics</h1>
+        <p class="page-subtitle">Accident trends, severity distribution, and response insights</p>
+    </div>
+    <div class="header-actions">
+        <button class="btn btn-ghost btn-sm" onclick="loadAnalytics()">↻ Refresh</button>
+    </div>
+</div>
+
+<!-- Stats Row -->
+<div class="stats-grid">
+    <div class="stat-card blue">
+        <div class="stat-icon">📊</div>
+        <div class="stat-value" id="a-total">—</div>
+        <div class="stat-label">Total Accidents</div>
+    </div>
+    <div class="stat-card red">
+        <div class="stat-icon">⚠️</div>
+        <div class="stat-value" id="a-critical">—</div>
+        <div class="stat-label">Critical Incidents</div>
+    </div>
+    <div class="stat-card green">
+        <div class="stat-icon">🏥</div>
+        <div class="stat-value" id="a-hospitals">—</div>
+        <div class="stat-label">Hospitals Active</div>
+    </div>
+    <div class="stat-card yellow">
+        <div class="stat-icon">🚑</div>
+        <div class="stat-value" id="a-fleet">—</div>
+        <div class="stat-label">Fleet Size</div>
+    </div>
+</div>
+
+<!-- Charts -->
+<div class="analytics-grid">
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">📈 Accidents Over Time</h3>
+        </div>
+        <div class="chart-container">
+            <canvas id="chart-timeline"></canvas>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">🎯 Severity Distribution</h3>
+        </div>
+        <div class="chart-container">
+            <canvas id="chart-severity"></canvas>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">🕐 Hourly Distribution</h3>
+        </div>
+        <div class="chart-container">
+            <canvas id="chart-hourly"></canvas>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">📍 Top Accident Locations</h3>
+        </div>
+        <div class="chart-container">
+            <canvas id="chart-locations"></canvas>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/analytics.js') }}"></script>
+{% endblock %}

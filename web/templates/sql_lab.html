@@ -1,0 +1,639 @@
+{% extends 'base.html' %}
+{% block title %}SQL Lab{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h1>🧪 SQL Operations Lab</h1>
+    <p>Complete showcase of all SQL operations used in this project with sample outputs</p>
+</div>
+
+<!-- Navigation -->
+<div class="sql-nav">
+    <a href="#cat-relational" class="sql-nav-btn blue">Relational Algebra</a>
+    <a href="#cat-dml" class="sql-nav-btn green">DML & Constraints</a>
+    <a href="#cat-joins" class="sql-nav-btn amber">Joins & Views</a>
+    <a href="#cat-functions" class="sql-nav-btn purple">Functions & Triggers</a>
+    <a href="#cat-research" class="sql-nav-btn red">Research Queries</a>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     CATEGORY 1: RELATIONAL ALGEBRA
+     ═══════════════════════════════════════════ -->
+<div class="sql-category" id="cat-relational">
+    <div class="category-header blue"><h2>📐 Relational Algebra Operations</h2><p>Selection (σ), Projection (π), Union (∪), Intersection (∩), Natural Join (⋈)</p></div>
+
+    <div class="query-card">
+        <div class="query-header"><span class="query-tag blue">σ SELECT</span><span class="query-title">Selection — Filter critical accidents</span></div>
+        <pre class="sql-code">-- Selection (σ): Filter rows matching a condition
+-- σ_{severity='Critical'}(accidents)
+
+SELECT accident_id, location, severity, vehicle_id, accident_time
+FROM accidents
+WHERE severity = 'Critical'
+ORDER BY accident_time DESC;</pre>
+        <div class="sample-output">
+            <div class="output-label">Sample Output (4 rows)</div>
+            <table><thead><tr><th>accident_id</th><th>location</th><th>severity</th><th>vehicle_id</th><th>accident_time</th></tr></thead><tbody>
+                <tr><td>138</td><td>Adyar Junction</td><td>Critical</td><td>TN09AE3833</td><td>2026-03-16 09:42:15</td></tr>
+                <tr><td>135</td><td>Egmore Station</td><td>Critical</td><td>TN02PH5834</td><td>2026-03-16 09:38:50</td></tr>
+                <tr><td>130</td><td>Marina Beach Drive</td><td>Critical</td><td>TN09BZ1100</td><td>2026-03-16 09:30:22</td></tr>
+                <tr><td>125</td><td>Porur Junction</td><td>Critical</td><td>TN22KL4521</td><td>2026-03-16 09:21:07</td></tr>
+            </tbody></table>
+        </div>
+    </div>
+
+    <div class="query-card">
+        <div class="query-header"><span class="query-tag blue">π PROJECT</span><span class="query-title">Projection — Pick specific columns</span></div>
+        <pre class="sql-code">-- Projection (π): Select specific attributes only
+-- π_{location, severity}(accidents)
+
+SELECT DISTINCT location, severity
+FROM accidents
+ORDER BY location;</pre>
+        <div class="sample-output">
+            <div class="output-label">Sample Output (8 rows)</div>
+            <table><thead><tr><th>location</th><th>severity</th></tr></thead><tbody>
+                <tr><td>Adyar Junction</td><td>Critical</td></tr>
+                <tr><td>Anna Nagar Signal</td><td>High</td></tr>
+                <tr><td>ECR Beach Road</td><td>Medium</td></tr>
+                <tr><td>Egmore Station</td><td>Critical</td></tr>
+                <tr><td>Marina Beach Drive</td><td>Critical</td></tr>
+                <tr><td>Mylapore Temple St</td><td>Medium</td></tr>
+                <tr><td>Porur Junction</td><td>High</td></tr>
+                <tr><td>Tambaram Highway</td><td>Low</td></tr>
+            </tbody></table>
+        </div>
+    </div>
+
+    <div class="query-card">
+        <div class="query-header"><span class="query-tag blue">∪ UNION</span><span class="query-title">Union — Combine names from two tables</span></div>
+        <pre class="sql-code">-- Union (∪): Combine results from two queries
+-- π_{name}(hospitals) ∪ π_{name}(drivers)
+
+SELECT name, 'Hospital' AS source FROM hospitals
+UNION
+SELECT name, 'Driver' AS source FROM drivers
+ORDER BY source, name;</pre>
+        <div class="sample-output">
+            <div class="output-label">Sample Output (8 rows)</div>
+            <table><thead><tr><th>name</th><th>source</th></tr></thead><tbody>
+                <tr><td>Arun Kumar</td><td>Driver</td></tr>
+                <tr><td>Karthik Rajan</td><td>Driver</td></tr>
+                <tr><td>Priya Sharma</td><td>Driver</td></tr>
+                <tr><td>Suresh Babu</td><td>Driver</td></tr>
+                <tr><td>Vijay Anand</td><td>Driver</td></tr>
+                <tr><td>Apollo Hospital Chennai</td><td>Hospital</td></tr>
+                <tr><td>Government General Hospital</td><td>Hospital</td></tr>
+                <tr><td>MIOT International</td><td>Hospital</td></tr>
+            </tbody></table>
+        </div>
+    </div>
+
+    <div class="query-card">
+        <div class="query-header"><span class="query-tag blue">∩ INTERSECTION</span><span class="query-title">Intersection — Hospitals with ambulances AND beds</span></div>
+        <pre class="sql-code">-- Intersection (∩): Find common elements
+-- Hospitals that have ambulances assigned AND beds available
+
+SELECT h.hospital_id, h.name, h.available_beds
+FROM hospitals h
+WHERE h.hospital_id IN (
+    SELECT DISTINCT assigned_hospital_id
+    FROM ambulances WHERE assigned_hospital_id IS NOT NULL
+) AND h.available_beds > 0
+ORDER BY h.name;</pre>
+        <div class="sample-output">
+            <div class="output-label">Sample Output (2 rows)</div>
+            <table><thead><tr><th>hospital_id</th><th>name</th><th>available_beds</th></tr></thead><tbody>
+                <tr><td>1</td><td>Apollo Hospital Chennai</td><td>42</td></tr>
+                <tr><td>2</td><td>Government General Hospital</td><td>85</td></tr>
+            </tbody></table>
+        </div>
+    </div>
+
+    <div class="query-card">
+        <div class="query-header"><span class="query-tag blue">⋈ NATURAL JOIN</span><span class="query-title">Natural Join — Ambulances with drivers</span></div>
+        <pre class="sql-code">-- Natural Join (⋈): Join tables on matching columns
+-- ambulances ⋈ drivers (on driver_id)
+
+SELECT a.ambulance_id, a.vehicle_number, a.status AS ambulance_status,
+       d.name AS driver_name, d.phone AS driver_phone,
+       d.status AS driver_status, d.rating
+FROM ambulances a
+INNER JOIN drivers d ON a.driver_id = d.driver_id
+ORDER BY a.ambulance_id;</pre>
+        <div class="sample-output">
+            <div class="output-label">Sample Output (5 rows)</div>
+            <table><thead><tr><th>ambulance_id</th><th>vehicle_number</th><th>ambulance_status</th><th>driver_name</th><th>driver_phone</th><th>driver_status</th><th>rating</th></tr></thead><tbody>
+                <tr><td>1</td><td>TN01-AB-1234</td><td>green</td><td>Arun Kumar</td><td>9876543210</td><td>active</td><td>4.8</td></tr>
+                <tr><td>2</td><td>TN01-CD-5678</td><td>yellow</td><td>Priya Sharma</td><td>9876543211</td><td>active</td><td>4.6</td></tr>
+                <tr><td>3</td><td>TN01-EF-9012</td><td>green</td><td>Karthik Rajan</td><td>9876543212</td><td>active</td><td>4.9</td></tr>
+                <tr><td>4</td><td>TN01-GH-3456</td><td>red</td><td>Suresh Babu</td><td>9876543213</td><td>active</td><td>4.5</td></tr>
+                <tr><td>5</td><td>TN01-IJ-7890</td><td>green</td><td>Vijay Anand</td><td>9876543214</td><td>active</td><td>4.7</td></tr>
+            </tbody></table>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     CATEGORY 2: DML & CONSTRAINTS
+     ═══════════════════════════════════════════ -->
+<div class="sql-category" id="cat-dml">
+    <div class="category-header green"><h2>✏️ DML & Constraints</h2><p>INSERT, UPDATE, DELETE operations with constraint demonstrations</p></div>
+
+    <div class="query-card">
+        <div class="query-header"><span class="query-tag green">INSERT</span><span class="query-title">Insert — Add accident records</span></div>
+        <pre class="sql-code">-- INSERT: Add a new accident record
+INSERT INTO accidents
+  (location, vehicle_id, severity, description, reported_by)
+VALUES
+  ('T Nagar Junction', 'TN01AB1234', 'High',
+   'AI-detected collision at T Nagar Junction', 'AI System');
+
+-- Verify: SELECT * FROM accidents ORDER BY accident_time DESC LIMIT 3;</pre>
+        <div class="sample-output">
+            <div class="output-label">Sample Output — Verification (3 rows)</div>
+            <table><thead><tr><th>accident_id</th><th>location</th><th>vehicle_id</th><th>severity</th><th>reported_by</th><th>accident_time</th></tr></thead><tbody>
+                <tr><td>146</td><td>T Nagar Junction</td><td>TN01AB1234</td><td>High</td><td>AI System</td><td>2026-03-16 10:15:30</td></tr>
+                <tr><td>145</td><td>Nungambakkam High Rd</td><td>TN22KM8832</td><td>Medium</td><td>AI System</td><td>2026-03-16 10:12:05</td></tr>
+                <tr><td>144</td><td>Tambaram Highway</td><td>TN09RZ4421</td><td>Low</td><td>AI System</td><td>2026-03-16 10:08:42</td></tr>
+            </tbody></table>
+        </div>
+    </div>
+
+    <div class="query-card">
+        <div class="query-header"><span class="query-tag green">UPDATE</span><span class="query-title">Update — Modify hospital bed count</span></div>
+        <pre class="sql-code">-- UPDATE: Reduce available beds when patient admitted
+UPDATE hospitals
+SET available_beds = available_beds - 1
+WHERE hospital_id = 1 AND available_beds > 0;
+
+-- Verify: SELECT hospital_id, name, available_beds, capacity FROM hospitals;</pre>
+        <div class="sample-output">
+            <div class="output-label">Sample Output — Verification (3 rows)</div>
+            <table><thead><tr><th>hospital_id</th><th>name</th><th>available_beds</th><th>capacity</th></tr></thead><tbody>
+                <tr><td>1</td><td>Apollo Hospital Chennai</td><td>41</td><td>120</td></tr>
+                <tr><td>2</td><td>Government General Hospital</td><td>85</td><td>200</td></tr>
+                <tr><td>3</td><td>MIOT International</td><td>35</td><td>100</td></tr>
+            </tbody></table>
+        </div>
+    </div>
+
+    <div class="query-card">
+        <div class="query-header"><span class="query-tag green">DELETE</span><span class="query-title">Delete — Remove test records</span></div>
+        <pre class="sql-code">-- DELETE: Remove resolved accidents older than 24 hours
+DELETE FROM accidents
+WHERE status = 'Resolved'
+  AND accident_time < NOW() - INTERVAL 24 HOUR;
+
+-- Verify: SELECT COUNT(*) AS remaining FROM accidents;</pre>
+        <div class="sample-output">
+            <div class="output-label">Sample Output — Verification (1 row)</div>
+            <table><thead><tr><th>remaining</th></tr></thead><tbody>
+                <tr><td>28</td></tr>
+            </tbody></table>
+        </div>
+    </div>
+
+    <div class="query-card">
+        <div class="query-header"><span class="query-tag green">CONSTRAINTS</span><span class="query-title">Show all foreign key relationships</span></div>
+        <pre class="sql-code">-- CONSTRAINTS: Show all foreign key relationships in the schema
+SELECT TABLE_NAME, COLUMN_NAME, CONSTRAINT_NAME,
+       REFERENCED_TABLE_NAME, REFERENCED_COLUMN_NAME
+FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE
+WHERE REFERENCED_TABLE_NAME IS NOT NULL
+  AND TABLE_SCHEMA = DATABASE()
+ORDER BY TABLE_NAME;</pre>
+        <div class="sample-output">
+            <div class="output-label">Sample Output (4 rows)</div>
+            <table><thead><tr><th>TABLE_NAME</th><th>COLUMN_NAME</th><th>CONSTRAINT_NAME</th><th>REFERENCED_TABLE_NAME</th><th>REFERENCED_COLUMN_NAME</th></tr></thead><tbody>
+                <tr><td>ambulances</td><td>assigned_accident_id</td><td>fk_amb_accident</td><td>accidents</td><td>accident_id</td></tr>
+                <tr><td>ambulances</td><td>assigned_hospital_id</td><td>fk_amb_hospital</td><td>hospitals</td><td>hospital_id</td></tr>
+                <tr><td>ambulances</td><td>driver_id</td><td>fk_amb_driver</td><td>drivers</td><td>driver_id</td></tr>
+                <tr><td>audit_logs</td><td>user_id</td><td>fk_audit_user</td><td>users</td><td>user_id</td></tr>
+            </tbody></table>
+        </div>
+    </div>
+
+    <div class="query-card">
+        <div class="query-header"><span class="query-tag green">UNION ALL + IN</span><span class="query-title">Set operations with IN clause</span></div>
+        <pre class="sql-code">-- SET OPERATIONS: UNION ALL (keeps duplicates) and IN clause
+SELECT severity AS item, 'Accident Severity' AS category
+FROM accidents WHERE severity IN ('Critical', 'High')
+UNION ALL
+SELECT status, 'Ambulance Status' FROM ambulances
+WHERE status IN ('yellow', 'red')
+ORDER BY category, item;</pre>
+        <div class="sample-output">
+            <div class="output-label">Sample Output (8 rows)</div>
+            <table><thead><tr><th>item</th><th>category</th></tr></thead><tbody>
+                <tr><td>Critical</td><td>Accident Severity</td></tr>
+                <tr><td>Critical</td><td>Accident Severity</td></tr>
+                <tr><td>High</td><td>Accident Severity</td></tr>
+                <tr><td>High</td><td>Accident Severity</td></tr>
+                <tr><td>High</td><td>Accident Severity</td></tr>
+                <tr><td>red</td><td>Ambulance Status</td></tr>
+                <tr><td>yellow</td><td>Ambulance Status</td></tr>
+                <tr><td>yellow</td><td>Ambulance Status</td></tr>
+            </tbody></table>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     CATEGORY 3: JOINS & VIEWS
+     ═══════════════════════════════════════════ -->
+<div class="sql-category" id="cat-joins">
+    <div class="category-header amber"><h2>🔗 Subqueries, Joins & Views</h2><p>Correlated subqueries, multi-table joins, and database views</p></div>
+
+    <div class="query-card">
+        <div class="query-header"><span class="query-tag amber">CORRELATED</span><span class="query-title">Correlated Subquery — Hospitals above avg beds</span></div>
+        <pre class="sql-code">-- CORRELATED SUBQUERY: Hospitals with above-average bed availability
+SELECT h.hospital_id, h.name, h.available_beds, h.capacity,
+       ROUND(h.available_beds * 100.0 / h.capacity, 1) AS occupancy_pct
+FROM hospitals h
+WHERE h.available_beds > (
+    SELECT AVG(h2.available_beds) FROM hospitals h2
+)
+ORDER BY h.available_beds DESC;</pre>
+        <div class="sample-output">
+            <div class="output-label">Sample Output (1 row)</div>
+            <table><thead><tr><th>hospital_id</th><th>name</th><th>available_beds</th><th>capacity</th><th>occupancy_pct</th></tr></thead><tbody>
+                <tr><td>2</td><td>Government General Hospital</td><td>85</td><td>200</td><td>42.5</td></tr>
+            </tbody></table>
+        </div>
+    </div>
+
+    <div class="query-card">
+        <div class="query-header"><span class="query-tag amber">SCALAR</span><span class="query-title">Scalar Subquery — Latest accident per severity</span></div>
+        <pre class="sql-code">-- SCALAR SUBQUERY: Most recent accident for each severity level
+SELECT a.accident_id, a.location, a.severity, a.accident_time
+FROM accidents a
+WHERE a.accident_time = (
+    SELECT MAX(a2.accident_time) FROM accidents a2
+    WHERE a2.severity = a.severity
+)
+ORDER BY a.severity;</pre>
+        <div class="sample-output">
+            <div class="output-label">Sample Output (4 rows)</div>
+            <table><thead><tr><th>accident_id</th><th>location</th><th>severity</th><th>accident_time</th></tr></thead><tbody>
+                <tr><td>138</td><td>Adyar Junction</td><td>Critical</td><td>2026-03-16 09:42:15</td></tr>
+                <tr><td>145</td><td>Nungambakkam High Rd</td><td>High</td><td>2026-03-16 10:12:05</td></tr>
+                <tr><td>140</td><td>Tambaram Highway</td><td>Low</td><td>2026-03-16 09:55:30</td></tr>
+                <tr><td>143</td><td>Mylapore Temple St</td><td>Medium</td><td>2026-03-16 10:05:18</td></tr>
+            </tbody></table>
+        </div>
+    </div>
+
+    <div class="query-card">
+        <div class="query-header"><span class="query-tag amber">3-TABLE JOIN</span><span class="query-title">Inner Join — Accidents + Ambulances + Hospitals</span></div>
+        <pre class="sql-code">-- INNER JOIN (3-table): Full dispatch chain
+SELECT a.accident_id, a.location AS accident_location, a.severity,
+       amb.vehicle_number AS ambulance,
+       amb.status AS ambulance_status,
+       h.name AS hospital_name
+FROM accidents a
+INNER JOIN ambulances amb ON amb.assigned_accident_id = a.accident_id
+INNER JOIN hospitals h ON amb.assigned_hospital_id = h.hospital_id
+ORDER BY a.accident_time DESC LIMIT 5;</pre>
+        <div class="sample-output">
+            <div class="output-label">Sample Output (3 rows)</div>
+            <table><thead><tr><th>accident_id</th><th>accident_location</th><th>severity</th><th>ambulance</th><th>ambulance_status</th><th>hospital_name</th></tr></thead><tbody>
+                <tr><td>138</td><td>Adyar Junction</td><td>Critical</td><td>TN01-CD-5678</td><td>red</td><td>Apollo Hospital Chennai</td></tr>
+                <tr><td>135</td><td>Egmore Station</td><td>Critical</td><td>TN01-GH-3456</td><td>red</td><td>Government General Hospital</td></tr>
+                <tr><td>130</td><td>Marina Beach Drive</td><td>High</td><td>TN01-IJ-7890</td><td>yellow</td><td>MIOT International</td></tr>
+            </tbody></table>
+        </div>
+    </div>
+
+    <div class="query-card">
+        <div class="query-header"><span class="query-tag amber">LEFT JOIN</span><span class="query-title">Left Join — All hospitals with ambulance counts</span></div>
+        <pre class="sql-code">-- LEFT JOIN: All hospitals, even those without ambulances
+SELECT h.hospital_id, h.name AS hospital_name, h.available_beds,
+       COUNT(amb.ambulance_id) AS assigned_ambulances,
+       GROUP_CONCAT(amb.vehicle_number SEPARATOR ', ') AS ambulance_numbers
+FROM hospitals h
+LEFT JOIN ambulances amb ON amb.assigned_hospital_id = h.hospital_id
+GROUP BY h.hospital_id, h.name, h.available_beds
+ORDER BY assigned_ambulances DESC;</pre>
+        <div class="sample-output">
+            <div class="output-label">Sample Output (3 rows)</div>
+            <table><thead><tr><th>hospital_id</th><th>hospital_name</th><th>available_beds</th><th>assigned_ambulances</th><th>ambulance_numbers</th></tr></thead><tbody>
+                <tr><td>1</td><td>Apollo Hospital Chennai</td><td>42</td><td>2</td><td>TN01-CD-5678, TN01-IJ-7890</td></tr>
+                <tr><td>2</td><td>Government General Hospital</td><td>85</td><td>1</td><td>TN01-GH-3456</td></tr>
+                <tr><td>3</td><td>MIOT International</td><td>35</td><td>0</td><td>NULL</td></tr>
+            </tbody></table>
+        </div>
+    </div>
+
+    <div class="query-card">
+        <div class="query-header"><span class="query-tag amber">VIEW</span><span class="query-title">Create & Query View — Critical accidents</span></div>
+        <pre class="sql-code">-- CREATE VIEW: Persistent query for critical/high severity
+CREATE OR REPLACE VIEW critical_accidents_view AS
+SELECT accident_id, location, severity, vehicle_id,
+       accident_time, reported_by, status
+FROM accidents WHERE severity IN ('Critical', 'High');
+
+-- Query the view:
+SELECT * FROM critical_accidents_view ORDER BY accident_time DESC LIMIT 5;</pre>
+        <div class="sample-output">
+            <div class="output-label">Sample Output (5 rows)</div>
+            <table><thead><tr><th>accident_id</th><th>location</th><th>severity</th><th>vehicle_id</th><th>accident_time</th><th>reported_by</th><th>status</th></tr></thead><tbody>
+                <tr><td>145</td><td>Nungambakkam High Rd</td><td>High</td><td>TN22KM8832</td><td>2026-03-16 10:12:05</td><td>AI System</td><td>Dispatched</td></tr>
+                <tr><td>138</td><td>Adyar Junction</td><td>Critical</td><td>TN09AE3833</td><td>2026-03-16 09:42:15</td><td>AI System</td><td>At Scene</td></tr>
+                <tr><td>135</td><td>Egmore Station</td><td>Critical</td><td>TN02PH5834</td><td>2026-03-16 09:38:50</td><td>AI System</td><td>Resolved</td></tr>
+                <tr><td>132</td><td>OMR IT Corridor</td><td>High</td><td>TN10DQ8840</td><td>2026-03-16 09:34:40</td><td>AI System</td><td>Resolved</td></tr>
+                <tr><td>130</td><td>Marina Beach Drive</td><td>Critical</td><td>TN09BZ1100</td><td>2026-03-16 09:30:22</td><td>AI System</td><td>Resolved</td></tr>
+            </tbody></table>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     CATEGORY 4: FUNCTIONS, TRIGGERS & EXCEPTION
+     ═══════════════════════════════════════════ -->
+<div class="sql-category" id="cat-functions">
+    <div class="category-header purple"><h2>⚙️ Functions, Triggers & Exception Handling</h2><p>Stored functions, audit triggers, cursor simulation, and safe error handling</p></div>
+
+    <div class="query-card">
+        <div class="query-header"><span class="query-tag purple">FUNCTION</span><span class="query-title">Stored Function — get_severity_count()</span></div>
+        <pre class="sql-code">-- STORED FUNCTION: Count accidents by severity
+DELIMITER $$
+CREATE FUNCTION get_severity_count(sev VARCHAR(20))
+RETURNS INT DETERMINISTIC READS SQL DATA
+BEGIN
+    DECLARE cnt INT DEFAULT 0;
+    SELECT COUNT(*) INTO cnt FROM accidents WHERE severity = sev;
+    RETURN cnt;
+END $$
+DELIMITER ;
+
+-- Usage:
+SELECT get_severity_count('Critical') AS critical_count;</pre>
+        <div class="sample-output">
+            <div class="output-label">Sample Output (4 rows)</div>
+            <table><thead><tr><th>severity</th><th>count</th></tr></thead><tbody>
+                <tr><td>Critical</td><td>8</td></tr>
+                <tr><td>High</td><td>12</td></tr>
+                <tr><td>Medium</td><td>15</td></tr>
+                <tr><td>Low</td><td>7</td></tr>
+            </tbody></table>
+        </div>
+    </div>
+
+    <div class="query-card">
+        <div class="query-header"><span class="query-tag purple">TRIGGER</span><span class="query-title">Audit Trigger — Log accident inserts</span></div>
+        <pre class="sql-code">-- TRIGGER: Log every new accident into audit_logs
+DELIMITER $$
+CREATE TRIGGER after_accident_audit
+AFTER INSERT ON accidents FOR EACH ROW
+BEGIN
+    INSERT INTO audit_logs (user_id, action, details)
+    VALUES (1, 'ACCIDENT_REPORTED',
+            CONCAT('New ', NEW.severity, ' accident at ',
+                   NEW.location, ' | Vehicle: ', NEW.vehicle_id));
+END $$
+DELIMITER ;
+
+-- Verify: SELECT * FROM audit_logs ORDER BY timestamp DESC LIMIT 3;</pre>
+        <div class="sample-output">
+            <div class="output-label">Sample Output — Audit Logs (3 rows)</div>
+            <table><thead><tr><th>log_id</th><th>user_id</th><th>action</th><th>details</th><th>timestamp</th></tr></thead><tbody>
+                <tr><td>42</td><td>1</td><td>ACCIDENT_REPORTED</td><td>New Critical accident at Adyar Junction | Vehicle: TN09AE3833</td><td>2026-03-16 09:42:15</td></tr>
+                <tr><td>41</td><td>1</td><td>ACCIDENT_REPORTED</td><td>New High accident at Nungambakkam | Vehicle: TN22KM8832</td><td>2026-03-16 09:40:50</td></tr>
+                <tr><td>40</td><td>1</td><td>ACCIDENT_REPORTED</td><td>New Medium accident at Mylapore Temple St | Vehicle: TN01XY5544</td><td>2026-03-16 09:38:22</td></tr>
+            </tbody></table>
+        </div>
+    </div>
+
+    <div class="query-card">
+        <div class="query-header"><span class="query-tag purple">CURSOR</span><span class="query-title">Cursor — Hospital bed classification (DECLARE → OPEN → FETCH → CLOSE)</span></div>
+        <pre class="sql-code">-- CURSOR: Full lifecycle — DECLARE, OPEN, FETCH, CLOSE
+DELIMITER $$
+CREATE PROCEDURE classify_hospital_beds()
+BEGIN
+    DECLARE v_id INT;
+    DECLARE v_name VARCHAR(100);
+    DECLARE v_beds INT;
+    DECLARE done INT DEFAULT FALSE;
+
+    -- Step 1: DECLARE the cursor
+    DECLARE hospital_cursor CURSOR FOR
+        SELECT hospital_id, name, available_beds FROM hospitals;
+
+    -- Handler to detect end of result set
+    DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
+
+    -- Temp table to store results
+    CREATE TEMPORARY TABLE IF NOT EXISTS bed_report (
+        hospital_id INT, name VARCHAR(100),
+        available_beds INT, bed_status VARCHAR(20)
+    );
+
+    -- Step 2: OPEN the cursor
+    OPEN hospital_cursor;
+
+    -- Step 3: FETCH rows one by one in a loop
+    read_loop: LOOP
+        FETCH hospital_cursor INTO v_id, v_name, v_beds;
+        IF done THEN LEAVE read_loop; END IF;
+
+        INSERT INTO bed_report VALUES (
+            v_id, v_name, v_beds,
+            CASE
+                WHEN v_beds > 50 THEN 'Available'
+                WHEN v_beds > 10 THEN 'Limited'
+                ELSE 'Critical'
+            END
+        );
+    END LOOP;
+
+    -- Step 4: CLOSE the cursor
+    CLOSE hospital_cursor;
+
+    SELECT * FROM bed_report;
+    DROP TEMPORARY TABLE bed_report;
+END $$
+DELIMITER ;
+
+-- Execute: CALL classify_hospital_beds();</pre>
+        <div class="sample-output">
+            <div class="output-label">Sample Output (3 rows)</div>
+            <table><thead><tr><th>hospital_id</th><th>name</th><th>available_beds</th><th>bed_status</th></tr></thead><tbody>
+                <tr><td>1</td><td>Apollo Hospital Chennai</td><td>42</td><td>Limited</td></tr>
+                <tr><td>2</td><td>Government General Hospital</td><td>85</td><td>Available</td></tr>
+                <tr><td>3</td><td>MIOT International</td><td>35</td><td>Limited</td></tr>
+            </tbody></table>
+        </div>
+    </div>
+
+    <div class="query-card">
+        <div class="query-header"><span class="query-tag purple">EXCEPTION</span><span class="query-title">Exception Handling — Safe bed updates</span></div>
+        <pre class="sql-code">-- EXCEPTION HANDLING: Safe bed update with error checks
+DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    SELECT 'ERROR: Update failed' AS result;
+DECLARE EXIT HANDLER FOR NOT FOUND
+    SELECT 'NOT_FOUND: Hospital does not exist' AS result;
+
+-- Equivalent safety check using CASE:
+SELECT hospital_id, name, available_beds, capacity,
+       CASE
+           WHEN available_beds < 2 THEN CONCAT('INSUFFICIENT - Only ', available_beds, ' beds')
+           ELSE CONCAT('SUCCESS - Remaining: ', available_beds - 2)
+       END AS safe_update_result
+FROM hospitals ORDER BY hospital_id;</pre>
+        <div class="sample-output">
+            <div class="output-label">Sample Output (3 rows)</div>
+            <table><thead><tr><th>hospital_id</th><th>name</th><th>available_beds</th><th>capacity</th><th>safe_update_result</th></tr></thead><tbody>
+                <tr><td>1</td><td>Apollo Hospital Chennai</td><td>42</td><td>120</td><td>SUCCESS - Remaining: 40</td></tr>
+                <tr><td>2</td><td>Government General Hospital</td><td>85</td><td>200</td><td>SUCCESS - Remaining: 83</td></tr>
+                <tr><td>3</td><td>MIOT International</td><td>35</td><td>100</td><td>SUCCESS - Remaining: 33</td></tr>
+            </tbody></table>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     CATEGORY 5: RESEARCH QUERIES
+     ═══════════════════════════════════════════ -->
+<div class="sql-category" id="cat-research">
+    <div class="category-header red"><h2>🔬 Research & Analytics Queries</h2><p>Golden hour tracking, hotspot analysis, fleet analytics, and heatmap generation</p></div>
+
+    <div class="query-card">
+        <div class="query-header"><span class="query-tag red">GOLDEN HOUR</span><span class="query-title">Golden Hour Tracking — Critical time window</span></div>
+        <pre class="sql-code">-- GOLDEN HOUR: Track 60-minute critical window for high-severity accidents
+SELECT a.accident_id, a.location, a.severity, a.accident_time,
+       TIMESTAMPDIFF(MINUTE, a.accident_time, NOW()) AS minutes_elapsed,
+       GREATEST(0, 60 - TIMESTAMPDIFF(MINUTE, a.accident_time, NOW()))
+           AS golden_minutes_remaining,
+       CASE
+           WHEN TIMESTAMPDIFF(MINUTE, a.accident_time, NOW()) <= 60
+               THEN 'WITHIN GOLDEN HOUR'
+           ELSE 'GOLDEN HOUR EXPIRED'
+       END AS golden_status
+FROM accidents a
+WHERE a.severity IN ('Critical', 'High')
+ORDER BY a.accident_time DESC LIMIT 5;</pre>
+        <div class="sample-output">
+            <div class="output-label">Sample Output (3 rows)</div>
+            <table><thead><tr><th>accident_id</th><th>location</th><th>severity</th><th>minutes_elapsed</th><th>golden_minutes_remaining</th><th>golden_status</th></tr></thead><tbody>
+                <tr><td>145</td><td>Nungambakkam High Rd</td><td>High</td><td>18</td><td>42</td><td>WITHIN GOLDEN HOUR</td></tr>
+                <tr><td>138</td><td>Adyar Junction</td><td>Critical</td><td>48</td><td>12</td><td>WITHIN GOLDEN HOUR</td></tr>
+                <tr><td>135</td><td>Egmore Station</td><td>Critical</td><td>92</td><td>0</td><td>GOLDEN HOUR EXPIRED</td></tr>
+            </tbody></table>
+        </div>
+    </div>
+
+    <div class="query-card">
+        <div class="query-header"><span class="query-tag red">HOTSPOT</span><span class="query-title">Hotspot Analysis — High-risk locations</span></div>
+        <pre class="sql-code">-- HOTSPOT ANALYSIS: Identify high-risk accident locations
+SELECT location, COUNT(*) AS accident_count,
+       GROUP_CONCAT(DISTINCT severity ORDER BY severity) AS severity_types,
+       ROUND(AVG(CASE
+           WHEN severity='Critical' THEN 4  WHEN severity='High' THEN 3
+           WHEN severity='Medium' THEN 2    ELSE 1
+       END), 1) AS avg_severity_score
+FROM accidents
+GROUP BY location HAVING COUNT(*) >= 2
+ORDER BY accident_count DESC, avg_severity_score DESC;</pre>
+        <div class="sample-output">
+            <div class="output-label">Sample Output (4 rows)</div>
+            <table><thead><tr><th>location</th><th>accident_count</th><th>severity_types</th><th>avg_severity_score</th></tr></thead><tbody>
+                <tr><td>Tambaram Highway</td><td>5</td><td>Critical,High,Low,Medium</td><td>2.4</td></tr>
+                <tr><td>Marina Beach Drive</td><td>3</td><td>Critical,High</td><td>3.7</td></tr>
+                <tr><td>Egmore Station</td><td>3</td><td>Critical,Medium</td><td>3.3</td></tr>
+                <tr><td>Adyar Junction</td><td>2</td><td>Critical,High</td><td>3.5</td></tr>
+            </tbody></table>
+        </div>
+    </div>
+
+    <div class="query-card">
+        <div class="query-header"><span class="query-tag red">FLEET</span><span class="query-title">Fleet Analytics — Ambulance & driver status</span></div>
+        <pre class="sql-code">-- FLEET ANALYTICS: Complete ambulance fleet status
+SELECT amb.ambulance_id, amb.vehicle_number, amb.status, amb.fuel_level,
+       d.name AS driver_name, d.rating AS driver_rating,
+       CASE
+           WHEN amb.status='green' THEN 'Available'
+           WHEN amb.status='yellow' THEN 'En Route to Accident'
+           WHEN amb.status='red' THEN 'At Scene / Transporting'
+       END AS status_description
+FROM ambulances amb
+LEFT JOIN drivers d ON amb.driver_id = d.driver_id
+ORDER BY amb.ambulance_id;</pre>
+        <div class="sample-output">
+            <div class="output-label">Sample Output (6 rows)</div>
+            <table><thead><tr><th>ambulance_id</th><th>vehicle_number</th><th>status</th><th>fuel_level</th><th>driver_name</th><th>driver_rating</th><th>status_description</th></tr></thead><tbody>
+                <tr><td>1</td><td>TN01-AB-1234</td><td>green</td><td>95</td><td>Arun Kumar</td><td>4.8</td><td>Available</td></tr>
+                <tr><td>2</td><td>TN01-CD-5678</td><td>yellow</td><td>78</td><td>Priya Sharma</td><td>4.6</td><td>En Route to Accident</td></tr>
+                <tr><td>3</td><td>TN01-EF-9012</td><td>green</td><td>88</td><td>Karthik Rajan</td><td>4.9</td><td>Available</td></tr>
+                <tr><td>4</td><td>TN01-GH-3456</td><td>red</td><td>62</td><td>Suresh Babu</td><td>4.5</td><td>At Scene / Transporting</td></tr>
+                <tr><td>5</td><td>TN01-IJ-7890</td><td>yellow</td><td>71</td><td>Vijay Anand</td><td>4.7</td><td>En Route to Accident</td></tr>
+                <tr><td>6</td><td>TN01-KL-2345</td><td>green</td><td>100</td><td>NULL</td><td>NULL</td><td>Available</td></tr>
+            </tbody></table>
+        </div>
+    </div>
+
+    <div class="query-card">
+        <div class="query-header"><span class="query-tag red">HEATMAP</span><span class="query-title">Heatmap Data — Severity-weighted coordinates</span></div>
+        <pre class="sql-code">-- HEATMAP DATA: Severity-weighted coordinates for map visualization
+SELECT latitude, longitude, severity,
+       CASE
+           WHEN severity='Critical' THEN 1.0
+           WHEN severity='High' THEN 0.75
+           WHEN severity='Medium' THEN 0.5  ELSE 0.25
+       END AS heat_intensity, location
+FROM accidents
+WHERE latitude IS NOT NULL AND longitude IS NOT NULL
+ORDER BY heat_intensity DESC;</pre>
+        <div class="sample-output">
+            <div class="output-label">Sample Output (5 rows)</div>
+            <table><thead><tr><th>latitude</th><th>longitude</th><th>severity</th><th>heat_intensity</th><th>location</th></tr></thead><tbody>
+                <tr><td>13.0063</td><td>80.2574</td><td>Critical</td><td>1.00</td><td>Adyar Junction</td></tr>
+                <tr><td>13.0732</td><td>80.2609</td><td>Critical</td><td>1.00</td><td>Egmore Station</td></tr>
+                <tr><td>13.0500</td><td>80.2824</td><td>Critical</td><td>1.00</td><td>Marina Beach Drive</td></tr>
+                <tr><td>13.0569</td><td>80.2425</td><td>High</td><td>0.75</td><td>Nungambakkam High Rd</td></tr>
+                <tr><td>12.9249</td><td>80.1000</td><td>Low</td><td>0.25</td><td>Tambaram Highway</td></tr>
+            </tbody></table>
+        </div>
+    </div>
+</div>
+
+<style>
+.sql-nav { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; position: sticky; top: 60px; z-index: 10; background: var(--bg); padding: 10px 0; }
+.sql-nav-btn { padding: 8px 16px; border-radius: 8px; border: 1px solid var(--border); background: var(--card-bg); color: var(--text-primary); text-decoration: none; font-size: 12px; font-weight: 600; transition: all 0.2s; }
+.sql-nav-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+.sql-nav-btn.blue { border-color: #3b82f6; color: #3b82f6; } .sql-nav-btn.blue:hover { background: rgba(59,130,246,0.08); }
+.sql-nav-btn.green { border-color: #10b981; color: #10b981; } .sql-nav-btn.green:hover { background: rgba(16,185,129,0.08); }
+.sql-nav-btn.amber { border-color: #f59e0b; color: #f59e0b; } .sql-nav-btn.amber:hover { background: rgba(245,158,11,0.08); }
+.sql-nav-btn.purple { border-color: #7c3aed; color: #7c3aed; } .sql-nav-btn.purple:hover { background: rgba(124,58,237,0.08); }
+.sql-nav-btn.red { border-color: #ef4444; color: #ef4444; } .sql-nav-btn.red:hover { background: rgba(239,68,68,0.08); }
+
+.sql-category { margin-bottom: 28px; }
+.category-header { padding: 16px 20px; border-radius: 12px 12px 0 0; border: 1px solid var(--border); border-bottom: none; }
+.category-header h2 { margin: 0 0 4px; font-size: 18px; }
+.category-header p { margin: 0; font-size: 12px; color: var(--text-muted); }
+.category-header.blue { background: linear-gradient(135deg, rgba(59,130,246,0.08), rgba(59,130,246,0.02)); }
+.category-header.green { background: linear-gradient(135deg, rgba(16,185,129,0.08), rgba(16,185,129,0.02)); }
+.category-header.amber { background: linear-gradient(135deg, rgba(245,158,11,0.08), rgba(245,158,11,0.02)); }
+.category-header.purple { background: linear-gradient(135deg, rgba(124,58,237,0.08), rgba(124,58,237,0.02)); }
+.category-header.red { background: linear-gradient(135deg, rgba(239,68,68,0.08), rgba(239,68,68,0.02)); }
+
+.query-card { border: 1px solid var(--border); border-top: none; background: var(--card-bg); }
+.query-card:last-child { border-radius: 0 0 12px 12px; overflow: hidden; }
+.query-header { display: flex; align-items: center; gap: 10px; padding: 10px 16px; background: var(--panel-bg); border-bottom: 1px solid var(--border); }
+.query-tag { font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 4px; letter-spacing: 0.5px; white-space: nowrap; }
+.query-tag.blue { background: rgba(59,130,246,0.15); color: #60a5fa; }
+.query-tag.green { background: rgba(16,185,129,0.15); color: #34d399; }
+.query-tag.amber { background: rgba(245,158,11,0.15); color: #fbbf24; }
+.query-tag.purple { background: rgba(124,58,237,0.15); color: #a78bfa; }
+.query-tag.red { background: rgba(239,68,68,0.15); color: #f87171; }
+.query-title { flex: 1; font-size: 13px; font-weight: 600; color: var(--text-primary); }
+
+.sql-code { margin: 0; padding: 14px 18px; background: #1e1e2e; color: #a6e3a1; font-family: 'JetBrains Mono', 'Fira Code', Consolas, monospace; font-size: 12.5px; line-height: 1.6; border: none; overflow-x: auto; white-space: pre; }
+
+.sample-output { border-top: 1px solid var(--border); }
+.output-label { padding: 6px 16px; font-size: 10px; font-weight: 700; color: var(--text-muted); letter-spacing: 0.5px; background: var(--panel-bg); text-transform: uppercase; }
+.sample-output table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.sample-output th { position: sticky; top: 0; background: var(--panel-bg); padding: 6px 12px; text-align: left; font-weight: 600; color: var(--text-primary); border-bottom: 2px solid var(--border); white-space: nowrap; font-size: 11px; }
+.sample-output td { padding: 5px 12px; border-bottom: 1px solid var(--border); color: var(--text-secondary); white-space: nowrap; font-size: 11px; }
+.sample-output tr:hover td { background: var(--surface-bg); }
+</style>
+{% endblock %}

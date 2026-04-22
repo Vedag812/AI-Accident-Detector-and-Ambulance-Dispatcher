@@ -1,0 +1,174 @@
+{% extends "base.html" %}
+{% block title %}Hospitals{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Hospital Management</h1>
+        <p class="page-subtitle">Manage bed availability, ICU capacity, and specialties</p>
+    </div>
+    <div class="header-actions">
+        <button class="btn btn-ghost btn-sm" onclick="loadHospitals()">↻ Refresh</button>
+    </div>
+</div>
+
+<!-- Stats -->
+<div class="stats-grid" id="hosp-stats">
+    <div class="stat-card blue">
+        <div class="stat-icon">🏥</div>
+        <div class="stat-value" id="h-total">—</div>
+        <div class="stat-label">Total Hospitals</div>
+    </div>
+    <div class="stat-card green">
+        <div class="stat-icon">🛏️</div>
+        <div class="stat-value" id="h-beds">—</div>
+        <div class="stat-label">Available Beds</div>
+    </div>
+    <div class="stat-card yellow">
+        <div class="stat-icon">🫀</div>
+        <div class="stat-value" id="h-icu">—</div>
+        <div class="stat-label">Available ICU</div>
+    </div>
+    <div class="stat-card red">
+        <div class="stat-icon">📊</div>
+        <div class="stat-value" id="h-cap">—</div>
+        <div class="stat-label">Total Capacity</div>
+    </div>
+</div>
+
+<!-- Table -->
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">All Hospitals</h3>
+    </div>
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th><th>Hospital Name</th><th>Specialty</th>
+                    <th>Beds</th><th>ICU</th><th>Max Severity</th>
+                    <th>Phone</th><th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="hospital-table"></tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Edit Modal -->
+<div class="modal-overlay" id="edit-hospital-modal">
+    <div class="modal">
+        <h2 class="modal-title">✏️ Edit Hospital</h2>
+        <input type="hidden" id="edit-h-id">
+        <div class="form-group">
+            <label class="form-label">Name</label>
+            <input type="text" class="form-input" id="edit-h-name">
+        </div>
+        <div class="form-group">
+            <label class="form-label">Specialty</label>
+            <input type="text" class="form-input" id="edit-h-specialty">
+        </div>
+        <div class="form-group">
+            <label class="form-label">Phone</label>
+            <input type="text" class="form-input" id="edit-h-phone">
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+            <div class="form-group">
+                <label class="form-label">Available Beds</label>
+                <input type="number" class="form-input" id="edit-h-beds">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Available ICU</label>
+                <input type="number" class="form-input" id="edit-h-icu">
+            </div>
+        </div>
+        <div class="form-group">
+            <label class="form-label">Max Severity</label>
+            <select class="form-select" id="edit-h-severity">
+                <option>Low</option><option>Medium</option><option>High</option><option>Critical</option>
+            </select>
+        </div>
+        <div class="modal-actions">
+            <button class="btn btn-ghost" onclick="closeModal('edit-hospital-modal')">Cancel</button>
+            <button class="btn btn-primary" onclick="saveHospital()">Save Changes</button>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+let hospitals = [];
+
+async function loadHospitals() {
+    hospitals = await api('/api/hospitals');
+    renderHospitalTable();
+    updateHospitalStats();
+}
+
+function renderHospitalTable() {
+    const tbody = document.getElementById('hospital-table');
+    tbody.innerHTML = hospitals.map(h => `
+        <tr>
+            <td>${h.hospital_id}</td>
+            <td style="font-weight:600;color:var(--text-primary)">${h.name}</td>
+            <td>${h.specialty || 'General'}</td>
+            <td>
+                <span style="color:${h.available_beds > 10 ? 'var(--green)' : h.available_beds > 0 ? 'var(--yellow)' : 'var(--red)'}; font-weight:700">
+                    ${h.available_beds}
+                </span> / ${h.capacity}
+            </td>
+            <td>
+                <span style="color:var(--accent);font-weight:700">${h.available_icu_beds || 0}</span> / ${h.icu_beds || 0}
+            </td>
+            <td><span class="badge badge-${(h.max_severity||'medium').toLowerCase()}">${h.max_severity || 'Medium'}</span></td>
+            <td>${h.phone || '—'}</td>
+            <td>
+                <button class="btn btn-ghost btn-sm" onclick="editHospital(${h.hospital_id})">✏️</button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+function updateHospitalStats() {
+    document.getElementById('h-total').textContent = hospitals.length;
+    document.getElementById('h-beds').textContent = hospitals.reduce((s,h) => s + h.available_beds, 0);
+    document.getElementById('h-icu').textContent = hospitals.reduce((s,h) => s + (h.available_icu_beds||0), 0);
+    document.getElementById('h-cap').textContent = hospitals.reduce((s,h) => s + h.capacity, 0);
+}
+
+function editHospital(id) {
+    const h = hospitals.find(x => x.hospital_id === id);
+    if (!h) return;
+    document.getElementById('edit-h-id').value = id;
+    document.getElementById('edit-h-name').value = h.name;
+    document.getElementById('edit-h-specialty').value = h.specialty || '';
+    document.getElementById('edit-h-phone').value = h.phone || '';
+    document.getElementById('edit-h-beds').value = h.available_beds;
+    document.getElementById('edit-h-icu').value = h.available_icu_beds || 0;
+    document.getElementById('edit-h-severity').value = h.max_severity || 'Medium';
+    openModal('edit-hospital-modal');
+}
+
+async function saveHospital() {
+    const id = document.getElementById('edit-h-id').value;
+    const data = {
+        name: document.getElementById('edit-h-name').value,
+        specialty: document.getElementById('edit-h-specialty').value,
+        phone: document.getElementById('edit-h-phone').value,
+        available_beds: parseInt(document.getElementById('edit-h-beds').value),
+        available_icu_beds: parseInt(document.getElementById('edit-h-icu').value),
+        max_severity: document.getElementById('edit-h-severity').value,
+    };
+    const res = await api(`/api/hospitals/${id}`, 'PUT', data);
+    if (res.success) {
+        showToast('Hospital updated successfully', 'success');
+        closeModal('edit-hospital-modal');
+        loadHospitals();
+    }
+}
+
+loadHospitals();
+</script>
+{% endblock %}

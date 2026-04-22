@@ -1,0 +1,160 @@
+{% extends "base.html" %}
+{% block title %}Traffic Signals{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Smart Traffic Control</h1>
+        <p class="page-subtitle">AI-powered traffic signal management • Ambulance priority routing</p>
+    </div>
+    <div class="header-actions">
+        <button class="btn btn-ghost btn-sm" onclick="loadSignals()">↻ Refresh</button>
+    </div>
+</div>
+
+<!-- Stats -->
+<div class="stats-grid">
+    <div class="stat-card blue">
+        <div class="stat-icon">🚦</div>
+        <div class="stat-value" id="t-total">—</div>
+        <div class="stat-label">Total Junctions</div>
+    </div>
+    <div class="stat-card green">
+        <div class="stat-icon">✅</div>
+        <div class="stat-value" id="t-normal">—</div>
+        <div class="stat-label">Normal Mode</div>
+    </div>
+    <div class="stat-card red">
+        <div class="stat-icon">🚑</div>
+        <div class="stat-value" id="t-priority">—</div>
+        <div class="stat-label">Priority Mode</div>
+    </div>
+    <div class="stat-card yellow">
+        <div class="stat-icon">🚗</div>
+        <div class="stat-value" id="t-vehicles">—</div>
+        <div class="stat-label">Total Vehicles</div>
+    </div>
+</div>
+
+<!-- Signal Grid -->
+<div id="signal-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:24px">
+</div>
+
+<!-- Map showing junctions -->
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">🗺️ Junction Map — Chennai</h3>
+    </div>
+    <div class="map-wrapper" id="traffic-map" style="height:400px"></div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let tMap;
+
+document.addEventListener('DOMContentLoaded', () => {
+    tMap = L.map('traffic-map', { zoomControl: false }).setView([13.0527, 80.2307], 12);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OSM contributors', maxZoom: 19
+    }).addTo(tMap);
+    L.control.zoom({ position: 'topright' }).addTo(tMap);
+    loadSignals();
+    setInterval(loadSignals, 5000);
+});
+
+async function loadSignals() {
+    const signals = await api('/api/traffic-signals');
+    if (!signals) return;
+
+    renderSignalCards(signals);
+    renderSignalMap(signals);
+    updateSignalStats(signals);
+}
+
+function updateSignalStats(signals) {
+    document.getElementById('t-total').textContent = signals.length;
+    document.getElementById('t-normal').textContent = signals.filter(s => s.mode === 'NORMAL').length;
+    document.getElementById('t-priority').textContent = signals.filter(s => s.mode === 'PRIORITY-GREEN').length;
+    document.getElementById('t-vehicles').textContent = signals.reduce((s, j) => s + j.vehicle_count, 0);
+}
+
+function phaseColor(phase) {
+    if (phase.includes('Green')) return 'var(--green)';
+    if (phase.includes('Red')) return 'var(--red)';
+    return 'var(--yellow)';
+}
+
+function densityColor(d) {
+    return { Low: 'var(--green)', Medium: 'var(--yellow)', High: 'var(--orange)', Heavy: 'var(--red)' }[d] || 'var(--text-muted)';
+}
+
+function renderSignalCards(signals) {
+    document.getElementById('signal-grid').innerHTML = signals.map(s => `
+        <div class="card" style="border-color:${s.ambulance_priority ? 'var(--red)' : 'var(--border)'}; ${s.ambulance_priority ? 'box-shadow:0 0 20px rgba(239,68,68,0.15);' : ''}">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+                <div>
+                    <div style="font-size:15px;font-weight:700">${s.name}</div>
+                    <div style="font-size:11px;color:var(--text-dim)">${s.id} • ${s.lanes} lanes</div>
+                </div>
+                ${s.ambulance_priority
+                    ? '<span class="badge badge-critical" style="animation:pulse 1s infinite">🚑 PRIORITY</span>'
+                    : '<span class="badge badge-available">NORMAL</span>'}
+            </div>
+
+            <!-- Traffic Light Visual -->
+            <div style="display:flex;align-items:center;gap:16px;margin-bottom:12px">
+                <div style="background:#1a1a2e;border-radius:20px;padding:6px;display:flex;flex-direction:column;gap:4px">
+                    <div style="width:20px;height:20px;border-radius:50%;background:${s.current_phase.includes('Red') || s.current_phase === 'All-Red' ? '#ef4444' : '#333'};box-shadow:${s.current_phase.includes('Red') || s.current_phase === 'All-Red' ? '0 0 10px #ef4444' : 'none'}"></div>
+                    <div style="width:20px;height:20px;border-radius:50%;background:${s.current_phase.includes('Yellow') ? '#f59e0b' : '#333'}"></div>
+                    <div style="width:20px;height:20px;border-radius:50%;background:${s.current_phase.includes('Green') ? '#10b981' : '#333'};box-shadow:${s.current_phase.includes('Green') ? '0 0 10px #10b981' : 'none'}"></div>
+                </div>
+                <div style="flex:1">
+                    <div style="font-size:13px;color:${phaseColor(s.current_phase)};font-weight:700">${s.current_phase}</div>
+                    <div style="font-size:20px;font-weight:800;color:var(--text-primary);margin:4px 0">${s.time_remaining}s</div>
+                    <div style="font-size:11px;color:var(--text-dim)">Cycle: ${s.cycle_time}s</div>
+                </div>
+                <div style="text-align:right">
+                    <div style="font-size:11px;color:var(--text-dim)">Vehicles</div>
+                    <div style="font-size:22px;font-weight:800">${s.vehicle_count}</div>
+                    <div style="font-size:11px;color:${densityColor(s.density)};font-weight:700">${s.density}</div>
+                </div>
+            </div>
+
+            ${!s.ambulance_priority ? `<button class="btn btn-warning btn-sm" style="width:100%" onclick="setPriority('${s.id}')">🚑 Activate Priority</button>` : `<div style="text-align:center;color:var(--red);font-size:12px;font-weight:700;padding:6px">🚑 All signals GREEN for ambulance passage</div>`}
+        </div>
+    `).join('');
+}
+
+let signalMarkers = [];
+function renderSignalMap(signals) {
+    signalMarkers.forEach(m => tMap.removeLayer(m));
+    signalMarkers = [];
+
+    signals.forEach(s => {
+        const color = s.ambulance_priority ? '#ef4444' : (s.current_phase.includes('Green') ? '#10b981' : s.current_phase.includes('Red') ? '#ef4444' : '#f59e0b');
+        const icon = L.divIcon({
+            html: `<div style="width:16px;height:16px;background:${color};border-radius:50%;border:3px solid white;box-shadow:0 0 12px ${color};${s.ambulance_priority?'animation:pulse 1s infinite':''}"></div>`,
+            className: '', iconSize: [16, 16], iconAnchor: [8, 8]
+        });
+        const m = L.marker([s.lat, s.lng], { icon })
+            .bindPopup(`<div style="font-family:Inter;min-width:160px">
+                <b>🚦 ${s.name}</b><br>
+                Phase: ${s.current_phase}<br>
+                Vehicles: ${s.vehicle_count} (${s.density})<br>
+                Mode: <b style="color:${s.ambulance_priority?'#ef4444':'#10b981'}">${s.mode}</b>
+            </div>`)
+            .addTo(tMap);
+        signalMarkers.push(m);
+    });
+}
+
+async function setPriority(junctionId) {
+    const res = await api(`/api/traffic-signals/${junctionId}/priority`, 'POST');
+    if (res && res.success) {
+        showToast(`🚑 Priority GREEN activated at ${junctionId}`, 'success');
+        loadSignals();
+    }
+}
+</script>
+{% endblock %}

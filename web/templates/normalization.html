@@ -1,0 +1,586 @@
+{% extends 'base.html' %}
+{% block title %}Normalization{% endblock %}
+{% block content %}
+<div id="norm-content">
+<div class="page-header">
+    <h1>📐 Database Normalization</h1>
+    <p>Step-by-step normalization of the Accident Alert System database from UNF to 5NF</p>
+</div>
+
+<!-- Navigation Pills -->
+<div class="norm-nav">
+    <a href="#unf" class="norm-pill">UNF</a>
+    <span class="norm-arrow">→</span>
+    <a href="#nf1" class="norm-pill">1NF</a>
+    <span class="norm-arrow">→</span>
+    <a href="#nf2" class="norm-pill">2NF</a>
+    <span class="norm-arrow">→</span>
+    <a href="#nf3" class="norm-pill">3NF</a>
+    <span class="norm-arrow">→</span>
+    <a href="#bcnf" class="norm-pill">BCNF</a>
+    <span class="norm-arrow">→</span>
+    <a href="#nf4" class="norm-pill">4NF</a>
+    <span class="norm-arrow">→</span>
+    <a href="#nf5" class="norm-pill">5NF</a>
+    <span class="norm-arrow">→</span>
+    <a href="#final" class="norm-pill final-pill">Final Schema</a>
+</div>
+
+<!-- ═══════════ UNF ═══════════ -->
+<div class="nf-card" id="unf">
+    <div class="nf-card-header"><span class="nf-num">0</span> Unnormalized Form (UNF)</div>
+    <div class="nf-card-body">
+        <div class="nf-desc">Raw accident report data stored in a single flat table. Contains <strong>multi-valued columns</strong> and massive <strong>redundancy</strong>.</div>
+        <div class="nf-table-wrap">
+            <table class="nf-tbl">
+                <thead><tr>
+                    <th>acc_id</th><th>location</th><th>vehicle_id</th><th>severity</th>
+                    <th>driver</th><th>driver_ph</th>
+                    <th>hospital</th><th>hosp_ph</th><th>beds</th>
+                    <th class="bad-col">staff_names</th><th class="bad-col">equipment</th>
+                </tr></thead>
+                <tbody>
+                    <tr><td>1</td><td>Adyar Junction</td><td>TN09AE3833</td><td>Critical</td><td>Rajesh Kumar</td><td>9876543210</td><td>Apollo Hospital</td><td>044-28296000</td><td>15</td><td class="bad-col">Dr. Sen, Dr. Roy</td><td class="bad-col">Ventilator×2, Defib×1</td></tr>
+                    <tr><td>2</td><td>Egmore Station</td><td>TN02PH5834</td><td>Critical</td><td>Suresh Babu</td><td>9876543211</td><td>Govt General</td><td>044-25305000</td><td>85</td><td class="bad-col">Dr. Sen, Dr. Das</td><td class="bad-col">Ventilator×3, ECG×2</td></tr>
+                    <tr><td>3</td><td>Marina Beach</td><td>TN09BZ1100</td><td>High</td><td>Rajesh Kumar</td><td>9876543210</td><td>Apollo Hospital</td><td>044-28296000</td><td>15</td><td class="bad-col">Dr. Roy</td><td class="bad-col">Defib×1</td></tr>
+                    <tr><td>4</td><td>T Nagar Junction</td><td>TN22KL7841</td><td>Medium</td><td>Venkat Raman</td><td>9876543212</td><td>MIOT International</td><td>044-42002000</td><td>20</td><td class="bad-col">Dr. Sharma, Dr. Roy</td><td class="bad-col">X-Ray×1, Stretcher×3</td></tr>
+                    <tr><td>5</td><td>Guindy Flyover</td><td>TN04XJ4598</td><td>Critical</td><td>Suresh Babu</td><td>9876543211</td><td>Govt General</td><td>044-25305000</td><td>85</td><td class="bad-col">Dr. Das, Dr. Sen, Dr. Priya</td><td class="bad-col">Ventilator×3, ECG×2, O₂ Cyl×5</td></tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="nf-warn-box">
+            <div class="warn-icon">⚠️</div>
+            <div>
+                <strong>Problems found:</strong>
+                <ul>
+                    <li><code>staff_names</code> and <code>equipment</code> are <strong>multi-valued (non-atomic)</strong></li>
+                    <li>Hospital info repeats for every accident → <strong>Update Anomaly</strong></li>
+                    <li>Deleting an accident may lose driver data → <strong>Delete Anomaly</strong></li>
+                    <li>Cannot insert a hospital without an accident → <strong>Insert Anomaly</strong></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════ 1NF ═══════════ -->
+<div class="nf-card" id="nf1">
+    <div class="nf-card-header nf1-hdr"><span class="nf-num">1</span> First Normal Form (1NF)</div>
+    <div class="nf-card-body">
+        <div class="nf-rule-box">
+            <strong>Rule:</strong> Each column must contain only <strong>atomic (indivisible)</strong> values. No repeating groups.
+        </div>
+        <div class="nf-table-wrap">
+            <table class="nf-tbl">
+                <thead><tr>
+                    <th class="pk-col">acc_id</th><th>location</th><th>vehicle_id</th><th>severity</th>
+                    <th>driver</th><th>driver_ph</th>
+                    <th>hospital</th><th>hosp_ph</th><th>beds</th>
+                    <th class="pk-col">staff_name</th><th>staff_role</th>
+                    <th class="pk-col">equip_name</th><th>equip_qty</th>
+                </tr></thead>
+                <tbody>
+                    <tr><td class="pk-col">1</td><td>Adyar Junction</td><td>TN09AE3833</td><td>Critical</td><td>Rajesh Kumar</td><td>9876543210</td><td>Apollo</td><td>044-28296000</td><td>15</td><td class="pk-col">Dr. Sen</td><td>Surgeon</td><td class="pk-col">Ventilator</td><td>2</td></tr>
+                    <tr><td class="pk-col">1</td><td>Adyar Junction</td><td>TN09AE3833</td><td>Critical</td><td>Rajesh Kumar</td><td>9876543210</td><td>Apollo</td><td>044-28296000</td><td>15</td><td class="pk-col">Dr. Roy</td><td>Nurse</td><td class="pk-col">Defibrillator</td><td>1</td></tr>
+                    <tr><td class="pk-col">2</td><td>Egmore Station</td><td>TN02PH5834</td><td>Critical</td><td>Suresh Babu</td><td>9876543211</td><td>Govt Gen</td><td>044-25305000</td><td>85</td><td class="pk-col">Dr. Sen</td><td>Surgeon</td><td class="pk-col">Ventilator</td><td>3</td></tr>
+                    <tr><td class="pk-col">2</td><td>Egmore Station</td><td>TN02PH5834</td><td>Critical</td><td>Suresh Babu</td><td>9876543211</td><td>Govt Gen</td><td>044-25305000</td><td>85</td><td class="pk-col">Dr. Das</td><td>Anesthetist</td><td class="pk-col">ECG</td><td>2</td></tr>
+                    <tr><td class="pk-col">3</td><td>Marina Beach</td><td>TN09BZ1100</td><td>High</td><td>Rajesh Kumar</td><td>9876543210</td><td>Apollo</td><td>044-28296000</td><td>15</td><td class="pk-col">Dr. Roy</td><td>Nurse</td><td class="pk-col">Defibrillator</td><td>1</td></tr>
+                    <tr><td class="pk-col">4</td><td>T Nagar Junc.</td><td>TN22KL7841</td><td>Medium</td><td>Venkat Raman</td><td>9876543212</td><td>MIOT</td><td>044-42002000</td><td>20</td><td class="pk-col">Dr. Sharma</td><td>Orthopedic</td><td class="pk-col">X-Ray</td><td>1</td></tr>
+                    <tr><td class="pk-col">4</td><td>T Nagar Junc.</td><td>TN22KL7841</td><td>Medium</td><td>Venkat Raman</td><td>9876543212</td><td>MIOT</td><td>044-42002000</td><td>20</td><td class="pk-col">Dr. Roy</td><td>Nurse</td><td class="pk-col">Stretcher</td><td>3</td></tr>
+                    <tr><td class="pk-col">5</td><td>Guindy Flyover</td><td>TN04XJ4598</td><td>Critical</td><td>Suresh Babu</td><td>9876543211</td><td>Govt Gen</td><td>044-25305000</td><td>85</td><td class="pk-col">Dr. Das</td><td>Anesthetist</td><td class="pk-col">Ventilator</td><td>3</td></tr>
+                    <tr><td class="pk-col">5</td><td>Guindy Flyover</td><td>TN04XJ4598</td><td>Critical</td><td>Suresh Babu</td><td>9876543211</td><td>Govt Gen</td><td>044-25305000</td><td>85</td><td class="pk-col">Dr. Sen</td><td>Surgeon</td><td class="pk-col">ECG</td><td>2</td></tr>
+                    <tr><td class="pk-col">5</td><td>Guindy Flyover</td><td>TN04XJ4598</td><td>Critical</td><td>Suresh Babu</td><td>9876543211</td><td>Govt Gen</td><td>044-25305000</td><td>85</td><td class="pk-col">Dr. Priya</td><td>Nurse</td><td class="pk-col">O₂ Cylinder</td><td>5</td></tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="nf-key-box">
+            <span class="key-emoji">🔑</span> <strong>Composite Key: { acc_id, staff_name, equip_name }</strong>
+        </div>
+        <div class="nf-warn-box">
+            <div class="warn-icon">⚠️</div>
+            <div>Still has redundancy: location repeats for every staff/equipment row. Hospital info repeats for every accident. Driver info repeats. This violates 2NF.</div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════ 2NF ═══════════ -->
+<div class="nf-card" id="nf2">
+    <div class="nf-card-header nf2-hdr"><span class="nf-num">2</span> Second Normal Form (2NF)</div>
+    <div class="nf-card-body">
+        <div class="nf-rule-box">
+            <strong>Rule:</strong> Must be in 1NF + <strong>No partial dependency</strong> (non-key attribute must depend on the FULL composite key).
+        </div>
+
+        <div class="nf-dep-section">
+            <h3 class="dep-heading red">Partial Dependencies Found:</h3>
+            <div class="dep-item-box">
+                <div class="dep-row"><code class="dep-code red">acc_id → location, vehicle_id, severity, hospital_name, beds</code><span class="dep-note">(depends ONLY on acc_id)</span></div>
+                <div class="dep-row"><code class="dep-code red">staff_name → staff_role</code><span class="dep-note">(depends ONLY on staff_name)</span></div>
+                <div class="dep-row"><code class="dep-code red">equip_name → equip_qty</code><span class="dep-note">(depends ONLY on equip_name)</span></div>
+            </div>
+        </div>
+
+        <div class="nf-solution">Solution: Decompose into separate tables, each with a single-column primary key.</div>
+
+        <div class="split-tables">
+            <div class="split-tbl-card">
+                <div class="split-tbl-name">Accidents</div>
+                <table class="nf-tbl mini"><thead><tr><th class="pk-col">accident_id ★</th><th>location</th><th>vehicle_id</th><th>severity</th><th>status</th></tr></thead><tbody>
+                    <tr><td class="pk-col">1</td><td>Adyar Junction</td><td>TN09AE3833</td><td>Critical</td><td>Reported</td></tr>
+                    <tr><td class="pk-col">2</td><td>Egmore Station</td><td>TN02PH5834</td><td>Critical</td><td>Reported</td></tr>
+                    <tr><td class="pk-col">3</td><td>Marina Beach</td><td>TN09BZ1100</td><td>High</td><td>Reported</td></tr>
+                    <tr><td class="pk-col">4</td><td>T Nagar Junction</td><td>TN22KL7841</td><td>Medium</td><td>Reported</td></tr>
+                    <tr><td class="pk-col">5</td><td>Guindy Flyover</td><td>TN04XJ4598</td><td>Critical</td><td>Reported</td></tr>
+                </tbody></table>
+            </div>
+            <div class="split-tbl-card">
+                <div class="split-tbl-name">Hospitals</div>
+                <table class="nf-tbl mini"><thead><tr><th class="pk-col">hospital_id ★</th><th>name</th><th>phone</th><th>beds</th><th>capacity</th></tr></thead><tbody>
+                    <tr><td class="pk-col">1</td><td>Apollo Hospital</td><td>044-28296000</td><td>15</td><td>100</td></tr>
+                    <tr><td class="pk-col">2</td><td>Govt General Hospital</td><td>044-25305000</td><td>85</td><td>200</td></tr>
+                    <tr><td class="pk-col">3</td><td>MIOT International</td><td>044-42002000</td><td>20</td><td>120</td></tr>
+                </tbody></table>
+            </div>
+            <div class="split-tbl-card">
+                <div class="split-tbl-name">Ambulances</div>
+                <table class="nf-tbl mini"><thead><tr><th class="pk-col">amb_id ★</th><th>vehicle_no</th><th>driver_name</th><th>driver_contact</th><th>status</th></tr></thead><tbody>
+                    <tr><td class="pk-col">1</td><td>TN01-AB-1234</td><td>Rajesh Kumar</td><td>9876543210</td><td>green</td></tr>
+                    <tr><td class="pk-col">2</td><td>TN01-CD-5678</td><td>Suresh Babu</td><td>9876543211</td><td>red</td></tr>
+                    <tr><td class="pk-col">3</td><td>TN01-EF-9012</td><td>Venkat Raman</td><td>9876543212</td><td>yellow</td></tr>
+                </tbody></table>
+            </div>
+            <div class="split-tbl-card">
+                <div class="split-tbl-name">Hospital_Staff</div>
+                <table class="nf-tbl mini"><thead><tr><th class="pk-col">staff_id ★</th><th>hospital_id</th><th>name</th><th>role</th><th>specialization</th></tr></thead><tbody>
+                    <tr><td class="pk-col">1</td><td>1</td><td>Dr. Sen</td><td>Doctor</td><td>Surgeon</td></tr>
+                    <tr><td class="pk-col">2</td><td>1</td><td>Dr. Roy</td><td>Nurse</td><td>General</td></tr>
+                    <tr><td class="pk-col">3</td><td>2</td><td>Dr. Das</td><td>Doctor</td><td>Anesthetist</td></tr>
+                    <tr><td class="pk-col">4</td><td>3</td><td>Dr. Sharma</td><td>Doctor</td><td>Orthopedic</td></tr>
+                    <tr><td class="pk-col">5</td><td>2</td><td>Dr. Priya</td><td>Nurse</td><td>General</td></tr>
+                </tbody></table>
+            </div>
+            <div class="split-tbl-card">
+                <div class="split-tbl-name">Equipment_Inventory</div>
+                <table class="nf-tbl mini"><thead><tr><th class="pk-col">equip_id ★</th><th>hospital_id</th><th>item_name</th><th>quantity</th><th>status</th></tr></thead><tbody>
+                    <tr><td class="pk-col">1</td><td>1</td><td>Ventilator</td><td>2</td><td>Available</td></tr>
+                    <tr><td class="pk-col">2</td><td>1</td><td>Defibrillator</td><td>1</td><td>Available</td></tr>
+                    <tr><td class="pk-col">3</td><td>2</td><td>Ventilator</td><td>3</td><td>Available</td></tr>
+                    <tr><td class="pk-col">4</td><td>2</td><td>ECG Machine</td><td>2</td><td>In Use</td></tr>
+                    <tr><td class="pk-col">5</td><td>3</td><td>X-Ray Machine</td><td>1</td><td>Available</td></tr>
+                    <tr><td class="pk-col">6</td><td>3</td><td>Stretcher</td><td>3</td><td>Available</td></tr>
+                    <tr><td class="pk-col">7</td><td>2</td><td>O₂ Cylinder</td><td>5</td><td>Available</td></tr>
+                </tbody></table>
+            </div>
+        </div>
+
+        <div class="nf-warn-box">
+            <div class="warn-icon">⚠️</div>
+            <div>Still has a problem: In Ambulances table, <code>driver_contact</code> depends on <code>driver_name</code> (not on the key <code>ambulance_id</code>). This is a <strong>transitive dependency</strong>.</div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════ 3NF ═══════════ -->
+<div class="nf-card" id="nf3">
+    <div class="nf-card-header nf3-hdr"><span class="nf-num">3</span> Third Normal Form (3NF)</div>
+    <div class="nf-card-body">
+        <div class="nf-rule-box">
+            <strong>Rule:</strong> Must be in 2NF + <strong>No transitive dependency</strong> (non-key attribute must not depend on another non-key attribute).
+        </div>
+
+        <div class="nf-dep-section">
+            <h3 class="dep-heading red">Transitive Dependencies Found:</h3>
+            <div class="dep-item-box">
+                <div class="dep-row"><code class="dep-code red">ambulance_id → driver_name → driver_contact</code><span class="dep-note">(driver_contact depends on driver_name, NOT on ambulance_id — this is transitive)</span></div>
+            </div>
+        </div>
+
+        <div class="nf-solution">Solution: Remove driver_name and driver_contact from Ambulances table and create a separate <strong>Drivers</strong> table.</div>
+        </div>
+
+        <div class="split-tables">
+            <div class="split-tbl-card">
+                <div class="split-tbl-name">Accidents <span class="tbl-badge ok">✓ 3NF</span></div>
+                <table class="nf-tbl mini"><thead><tr><th class="pk-col">accident_id ★</th><th>location</th><th>lat</th><th>lng</th><th>vehicle_id</th><th>severity</th></tr></thead><tbody>
+                    <tr><td class="pk-col">1</td><td>Adyar Junction</td><td>13.006</td><td>80.257</td><td>TN09AE3833</td><td>Critical</td></tr>
+                    <tr><td class="pk-col">2</td><td>Egmore Station</td><td>13.073</td><td>80.261</td><td>TN02PH5834</td><td>Critical</td></tr>
+                    <tr><td class="pk-col">3</td><td>Marina Beach</td><td>13.050</td><td>80.282</td><td>TN09BZ1100</td><td>High</td></tr>
+                    <tr><td class="pk-col">4</td><td>T Nagar Junction</td><td>13.042</td><td>80.234</td><td>TN22KL7841</td><td>Medium</td></tr>
+                    <tr><td class="pk-col">5</td><td>Guindy Flyover</td><td>13.007</td><td>80.221</td><td>TN04XJ4598</td><td>Critical</td></tr>
+                </tbody></table>
+            </div>
+            <div class="split-tbl-card">
+                <div class="split-tbl-name">Ambulances <span class="tbl-badge modified">MODIFIED</span></div>
+                <table class="nf-tbl mini"><thead><tr><th class="pk-col">amb_id ★</th><th>vehicle_no</th><th class="fk-col">driver_id FK</th><th>status</th><th class="fk-col">acc_id FK</th><th class="fk-col">hosp_id FK</th></tr></thead><tbody>
+                    <tr><td class="pk-col">1</td><td>TN01-AB-1234</td><td class="fk-col">1</td><td>green</td><td class="fk-col">NULL</td><td class="fk-col">NULL</td></tr>
+                    <tr><td class="pk-col">2</td><td>TN01-CD-5678</td><td class="fk-col">2</td><td>red</td><td class="fk-col">2</td><td class="fk-col">2</td></tr>
+                    <tr><td class="pk-col">3</td><td>TN01-EF-9012</td><td class="fk-col">3</td><td>yellow</td><td class="fk-col">1</td><td class="fk-col">1</td></tr>
+                </tbody></table>
+            </div>
+            <div class="split-tbl-card highlight-new">
+                <div class="split-tbl-name">Drivers <span class="tbl-badge new">✦ NEW</span></div>
+                <table class="nf-tbl mini"><thead><tr><th class="pk-col">driver_id ★</th><th>name</th><th>phone</th><th>license_no</th><th>status</th><th>rating</th></tr></thead><tbody>
+                    <tr><td class="pk-col">1</td><td>Rajesh Kumar</td><td>9876543210</td><td>TN-DL-001</td><td>active</td><td>4.8</td></tr>
+                    <tr><td class="pk-col">2</td><td>Suresh Babu</td><td>9876543211</td><td>TN-DL-002</td><td>active</td><td>4.5</td></tr>
+                    <tr><td class="pk-col">3</td><td>Venkat Raman</td><td>9876543212</td><td>TN-DL-003</td><td>active</td><td>4.7</td></tr>
+                </tbody></table>
+            </div>
+            <div class="split-tbl-card">
+                <div class="split-tbl-name">Hospitals <span class="tbl-badge ok">✓ 3NF</span></div>
+                <table class="nf-tbl mini"><thead><tr><th class="pk-col">hospital_id ★</th><th>name</th><th>lat</th><th>lng</th><th>beds</th><th>capacity</th></tr></thead><tbody>
+                    <tr><td class="pk-col">1</td><td>Apollo Hospital</td><td>13.036</td><td>80.246</td><td>15</td><td>100</td></tr>
+                    <tr><td class="pk-col">2</td><td>Govt General</td><td>13.089</td><td>80.210</td><td>85</td><td>200</td></tr>
+                    <tr><td class="pk-col">3</td><td>MIOT International</td><td>13.057</td><td>80.254</td><td>20</td><td>120</td></tr>
+                </tbody></table>
+            </div>
+        </div>
+
+        <div class="nf-success-box">
+            <div class="success-icon">✅</div>
+            <div><strong>No transitive dependencies remain.</strong> Every non-key attribute depends directly on the primary key.</div>
+        </div>
+    </div>
+</div>
+
+
+
+<!-- ═══════════ BCNF ═══════════ -->
+<div class="nf-card" id="bcnf">
+    <div class="nf-card-header nf3-hdr"><span class="nf-num">B</span> Boyce-Codd Normal Form (BCNF)</div>
+    <div class="nf-card-body">
+        <div class="nf-rule-box">
+            <strong>Rule:</strong> For every non-trivial functional dependency X → Y, X must be a <strong>superkey</strong>.
+        </div>
+
+        <div class="nf-dep-section">
+            <h3 class="dep-heading red">Problem: <code>instructor_name → certification_type</code> (instructor is not a superkey)</h3>
+        </div>
+
+        <h4 class="before-after-label bad-label">❌ Before BCNF — Ambulance_Training Table</h4>
+        <div class="nf-table-wrap">
+            <table class="nf-tbl">
+                <thead><tr><th>doctor_id</th><th>certification_type</th><th>instructor_name</th></tr></thead>
+                <tbody>
+                    <tr><td>101</td><td>Trauma Care</td><td>Dr. Sharma</td></tr>
+                    <tr><td>102</td><td>Trauma Care</td><td>Dr. Sharma</td></tr>
+                    <tr><td>101</td><td>Adv. Life Support</td><td>Dr. Roy</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="nf-solution" style="margin-top:20px;">Solution: Extract the determinant (<code>instructor_name</code>) into its own table.</div>
+
+        <h4 class="before-after-label good-label">✅ After BCNF — Decomposed Tables</h4>
+        <div class="after-tables-row">
+            <div class="after-tbl-card">
+                <div class="split-tbl-name">Instructors <span class="tbl-badge new">BCNF</span></div>
+                <table class="nf-tbl mini"><thead><tr><th class="pk-col">instructor_name ★</th><th>cert_type</th></tr></thead><tbody>
+                    <tr><td class="pk-col">Dr. Sharma</td><td>Trauma Care</td></tr>
+                    <tr><td class="pk-col">Dr. Roy</td><td>Adv. Life Support</td></tr>
+                </tbody></table>
+            </div>
+            <div class="after-tbl-card">
+                <div class="split-tbl-name">Doctor_Training <span class="tbl-badge new">BCNF</span></div>
+                <table class="nf-tbl mini"><thead><tr><th>doctor_id</th><th class="fk-col">instructor_name FK</th></tr></thead><tbody>
+                    <tr><td>101</td><td class="fk-col">Dr. Sharma</td></tr>
+                    <tr><td>102</td><td class="fk-col">Dr. Sharma</td></tr>
+                    <tr><td>101</td><td class="fk-col">Dr. Roy</td></tr>
+                </tbody></table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════ 4NF ═══════════ -->
+<div class="nf-card" id="nf4">
+    <div class="nf-card-header nf2-hdr"><span class="nf-num">4</span> Fourth Normal Form (4NF)</div>
+    <div class="nf-card-body">
+        <div class="nf-rule-box">
+            <strong>Rule:</strong> Must be in BCNF and contain no <strong>Multi-Valued Dependencies (MVDs)</strong>. Independent multi-valued facts must not share the same table.
+        </div>
+
+        <div class="nf-dep-section">
+            <h3 class="dep-heading red">Problem: Hospital has independent MVDs — Specialties and Contractors cause massive duplication</h3>
+        </div>
+
+        <h4 class="before-after-label bad-label">❌ Before 4NF — Hospital_Offerings Table</h4>
+        <div class="nf-table-wrap">
+            <table class="nf-tbl">
+                <thead><tr><th>hospital_name</th><th>specialty</th><th>contractor</th></tr></thead>
+                <tbody>
+                    <tr><td>Apollo Hospital</td><td>Cardiology</td><td>MedSupply Inc</td></tr>
+                    <tr><td>Apollo Hospital</td><td>Orthopedics</td><td>MedSupply Inc</td></tr>
+                    <tr><td>Apollo Hospital</td><td>Cardiology</td><td>BioTech Corp</td></tr>
+                    <tr><td>Apollo Hospital</td><td>Orthopedics</td><td>BioTech Corp</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="nf-solution" style="margin-top:20px;">Solution: Split independent multi-valued facts into separate tables.</div>
+
+        <h4 class="before-after-label good-label">✅ After 4NF — Decomposed Tables</h4>
+        <div class="after-tables-row">
+            <div class="after-tbl-card">
+                <div class="split-tbl-name">Hospital_Specialties <span class="tbl-badge new">4NF</span></div>
+                <table class="nf-tbl mini"><thead><tr><th>hospital_name</th><th>specialty</th></tr></thead><tbody>
+                    <tr><td>Apollo Hospital</td><td>Cardiology</td></tr>
+                    <tr><td>Apollo Hospital</td><td>Orthopedics</td></tr>
+                </tbody></table>
+            </div>
+            <div class="after-tbl-card">
+                <div class="split-tbl-name">Hospital_Contractors <span class="tbl-badge new">4NF</span></div>
+                <table class="nf-tbl mini"><thead><tr><th>hospital_name</th><th>contractor</th></tr></thead><tbody>
+                    <tr><td>Apollo Hospital</td><td>MedSupply Inc</td></tr>
+                    <tr><td>Apollo Hospital</td><td>BioTech Corp</td></tr>
+                </tbody></table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════ 5NF ═══════════ -->
+<div class="nf-card" id="nf5">
+    <div class="nf-card-header final-hdr"><span class="nf-num">5</span> Fifth Normal Form (5NF)</div>
+    <div class="nf-card-body">
+        <div class="nf-rule-box">
+            <strong>Rule:</strong> Must have no <strong>Join Dependencies</strong>. A ternary relationship cannot be split into just two tables without creating spurious (fake) tuples.
+        </div>
+
+        <div class="nf-dep-section">
+            <h3 class="dep-heading red">Problem: 3-Way Join Dependency — Dispatcher, Hospital, and Vendor</h3>
+        </div>
+
+        <h4 class="before-after-label bad-label">❌ Before 5NF — Dispatch_Network Table</h4>
+        <div class="nf-table-wrap">
+            <table class="nf-tbl">
+                <thead><tr><th>dispatcher_name</th><th>hospital_name</th><th>vendor_name</th></tr></thead>
+                <tbody>
+                    <tr><td>Disp_Alice</td><td>Apollo Hospital</td><td>FastResponse LLC</td></tr>
+                    <tr><td>Disp_Alice</td><td>Govt General</td><td>FastResponse LLC</td></tr>
+                    <tr><td>Disp_Bob</td><td>Apollo Hospital</td><td>CityRescue Inc</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="nf-solution" style="margin-top:20px;">Solution: Decompose into <strong>THREE</strong> binary tables to avoid fake associations.</div>
+
+        <h4 class="before-after-label good-label">✅ After 5NF — Three Decomposed Tables</h4>
+        <div class="after-tables-row three-col">
+            <div class="after-tbl-card">
+                <div class="split-tbl-name">Dispatcher_Hospitals <span class="tbl-badge new">5NF</span></div>
+                <table class="nf-tbl mini"><thead><tr><th>dispatcher</th><th>hospital</th></tr></thead><tbody>
+                    <tr><td>Disp_Alice</td><td>Apollo Hospital</td></tr>
+                    <tr><td>Disp_Alice</td><td>Govt General</td></tr>
+                    <tr><td>Disp_Bob</td><td>Apollo Hospital</td></tr>
+                </tbody></table>
+            </div>
+            <div class="after-tbl-card">
+                <div class="split-tbl-name">Hospital_Vendors <span class="tbl-badge new">5NF</span></div>
+                <table class="nf-tbl mini"><thead><tr><th>hospital</th><th>vendor</th></tr></thead><tbody>
+                    <tr><td>Apollo Hospital</td><td>FastResponse LLC</td></tr>
+                    <tr><td>Govt General</td><td>FastResponse LLC</td></tr>
+                    <tr><td>Apollo Hospital</td><td>CityRescue Inc</td></tr>
+                </tbody></table>
+            </div>
+            <div class="after-tbl-card">
+                <div class="split-tbl-name">Dispatcher_Vendors <span class="tbl-badge new">5NF</span></div>
+                <table class="nf-tbl mini"><thead><tr><th>dispatcher</th><th>vendor</th></tr></thead><tbody>
+                    <tr><td>Disp_Alice</td><td>FastResponse LLC</td></tr>
+                    <tr><td>Disp_Bob</td><td>CityRescue Inc</td></tr>
+                </tbody></table>
+            </div>
+        </div>
+
+        <div class="nf-success-box" style="margin-top:16px;">
+            <div class="success-icon">✅</div>
+            <div><strong>Joining all three tables</strong> perfectly reconstructs the original data without any spurious tuples.</div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════ FINAL SCHEMA ═══════════ -->
+<div class="nf-card" id="final">
+    <div class="nf-card-header final-hdr"><span class="nf-num">✓</span> Final 3NF Schema</div>
+    <div class="nf-card-body">
+        <pre class="er-box">┌──────────────┐         ┌──────────────────┐         ┌──────────────┐
+│   USERS      │         │   ACCIDENTS      │         │  HOSPITALS   │
+│──────────────│         │──────────────────│         │──────────────│
+│ id ★         │         │ accident_id ★    │         │ hospital_id ★│
+│ username (U) │         │ location (NN)    │         │ name (NN)    │
+│ password (NN)│         │ latitude         │         │ latitude     │
+│ role (D)     │         │ longitude        │         │ longitude    │
+│ full_name    │         │ vehicle_id       │         │ available_beds│
+│ email        │         │ severity (D)     │         │ capacity     │
+└──────┬───────┘         │ status (D)       │         │ contact      │
+       │                 └────────┬─────────┘         └──────┬───────┘
+       │                         │                           │
+       ▼                         ▼                           ▼
+┌──────────────┐         ┌──────────────────┐         ┌──────────────┐
+│ AUDIT_LOGS   │         │   AMBULANCES     │         │HOSPITAL_STAFF│
+│──────────────│         │──────────────────│         │──────────────│
+│ log_id ★     │         │ ambulance_id ★   │         │ staff_id ★   │
+│ user_id (FK) │         │ vehicle_number   │         │ hospital_id FK│
+│ action       │         │ driver_id (FK)───┼──→      │ name         │
+│ details      │         │ status (D)       │         │ role         │
+│ timestamp    │         │ acc_id (FK)──────┼──→      │ specialization│
+└──────────────┘         │ hosp_id (FK)─────┼──→      └──────────────┘
+                         └────────┬─────────┘
+                                  │              ┌──────────────┐
+                                  ▼              │EQUIPMENT_INV │
+                         ┌──────────────────┐    │──────────────│
+                         │  DRIVERS ✦ NEW   │    │ equipment_id★│
+                         │──────────────────│    │ hospital_id FK│
+                         │ driver_id ★      │    │ item_name    │
+                         │ name             │    │ quantity     │
+                         │ phone            │    │ status       │
+                         │ license_number   │    └──────────────┘
+                         │ rating           │
+                         └──────────────────┘
+
+ ★ = Primary Key    FK = Foreign Key     NN = NOT NULL
+ U = UNIQUE         D = DEFAULT value    ✦ = Created during 3NF</pre>
+
+        <h3 class="summary-title">Normalization Summary</h3>
+        <table class="nf-tbl summary">
+            <thead><tr><th>Step</th><th>Action Taken</th><th>Before</th><th>After</th></tr></thead>
+            <tbody>
+                <tr><td class="step-cell">UNF → 1NF</td><td>Removed multi-valued columns (staff_names, equipment). Made all values atomic.</td><td>1 flat table</td><td>1 table (atomic)</td></tr>
+                <tr><td class="step-cell">1NF → 2NF</td><td>Removed partial dependencies. Split into accidents, hospitals, ambulances, staff, equipment tables.</td><td>1 table</td><td>6 tables</td></tr>
+                <tr><td class="step-cell">2NF → 3NF</td><td>Removed transitive dependency (driver_contact depends on driver_name). Created separate drivers table.</td><td>6 tables</td><td><strong>10 tables</strong></td></tr>
+            </tbody>
+        </table>
+
+        <div class="final-tables-list">
+            <h3 class="summary-title">All 10 Tables in 3NF</h3>
+            <div class="final-grid">
+                <div class="final-item"><span class="fi-num">1</span><span class="fi-name">users</span><span class="fi-desc">Authentication & roles</span></div>
+                <div class="final-item"><span class="fi-num">2</span><span class="fi-name">accidents</span><span class="fi-desc">Accident reports with GPS</span></div>
+                <div class="final-item"><span class="fi-num">3</span><span class="fi-name">hospitals</span><span class="fi-desc">Hospital details & beds</span></div>
+                <div class="final-item"><span class="fi-num">4</span><span class="fi-name">ambulances</span><span class="fi-desc">Fleet with FK to drivers</span></div>
+                <div class="final-item new-item"><span class="fi-num">5</span><span class="fi-name">drivers ✦</span><span class="fi-desc">Created in 3NF step</span></div>
+                <div class="final-item"><span class="fi-num">6</span><span class="fi-name">hospital_staff</span><span class="fi-desc">Staff with FK to hospitals</span></div>
+                <div class="final-item"><span class="fi-num">7</span><span class="fi-name">equipment_inventory</span><span class="fi-desc">Equipment per hospital</span></div>
+                <div class="final-item"><span class="fi-num">8</span><span class="fi-name">ambulance_requests</span><span class="fi-desc">Dispatch records</span></div>
+                <div class="final-item"><span class="fi-num">9</span><span class="fi-name">audit_logs</span><span class="fi-desc">System activity trail</span></div>
+                <div class="final-item"><span class="fi-num">10</span><span class="fi-name">messages</span><span class="fi-desc">Communication system</span></div>
+            </div>
+        </div>
+    </div>
+</div>
+</div><!-- end #norm-content -->
+
+<style>
+/* ── Page-level constraint to prevent sidebar overflow ── */
+#norm-content{max-width:100%;overflow-x:hidden;box-sizing:border-box}
+
+/* ── Navigation ── */
+.norm-nav{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:24px;position:sticky;top:60px;z-index:10;background:var(--bg);padding:12px 0}
+.norm-pill{padding:10px 22px;border-radius:25px;font-weight:700;font-size:14px;text-decoration:none;background:linear-gradient(135deg,#0d9488,#0f766e);color:#fff;transition:all .25s;box-shadow:0 2px 8px rgba(13,148,136,.25)}
+.norm-pill:hover{transform:translateY(-3px);box-shadow:0 6px 20px rgba(13,148,136,.35)}
+.norm-pill.final-pill{background:linear-gradient(135deg,#7c3aed,#6d28d9)}
+.norm-arrow{color:var(--text-muted);font-size:22px;font-weight:800}
+
+/* ── Cards ── */
+.nf-card{margin-bottom:28px;border-radius:16px;overflow:visible;border:1px solid var(--border);box-shadow:0 4px 24px rgba(0,0,0,.08)}
+.nf-card-header{padding:20px 28px;display:flex;align-items:center;gap:16px;font-size:22px;font-weight:800;color:#fff;background:linear-gradient(135deg,#64748b,#475569);border-radius:16px 16px 0 0}
+.nf-card-header.nf1-hdr{background:linear-gradient(135deg,#0d9488,#0f766e)}
+.nf-card-header.nf2-hdr{background:linear-gradient(135deg,#d97706,#b45309)}
+.nf-card-header.nf3-hdr{background:linear-gradient(135deg,#059669,#047857)}
+.nf-card-header.final-hdr{background:linear-gradient(135deg,#7c3aed,#6d28d9)}
+.nf-num{width:48px;height:48px;border-radius:14px;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:900;flex-shrink:0;backdrop-filter:blur(4px)}
+.nf-card-body{padding:24px 28px;background:var(--card-bg);overflow-x:auto}
+
+/* ── Description & Rules ── */
+.nf-desc{font-size:14px;color:var(--text-secondary);margin-bottom:16px;line-height:1.6}
+.nf-rule-box{padding:14px 20px;border-left:5px solid #0d9488;background:rgba(13,148,136,.06);border-radius:0 10px 10px 0;margin-bottom:20px;font-size:14px;color:var(--text-primary);line-height:1.5}
+
+/* ── Tables ── */
+.nf-table-wrap{overflow-x:auto;margin:16px 0;border-radius:10px;border:1px solid var(--border)}
+.nf-tbl{width:100%;border-collapse:collapse;font-size:13px}
+.nf-tbl.mini{font-size:12px}
+.nf-tbl thead tr{background:linear-gradient(135deg,#0d9488,#0f766e)}
+.nf-tbl th{padding:10px 14px;text-align:left;font-weight:700;color:#fff;white-space:nowrap;font-size:12px;letter-spacing:.3px}
+.nf-tbl td{padding:9px 14px;border-bottom:1px solid var(--border);color:var(--text-secondary)}
+.nf-tbl tbody tr:nth-child(even) td{background:rgba(13,148,136,.03)}
+.nf-tbl tbody tr:hover td{background:rgba(13,148,136,.08)}
+.nf-tbl.mini th{padding:8px 12px;font-size:11px}
+.nf-tbl.mini td{padding:7px 12px;font-size:12px;white-space:normal;word-break:break-word}
+.nf-tbl.summary{margin-top:12px;border-radius:10px;overflow:hidden;border:1px solid var(--border)}
+.nf-tbl.summary td{font-size:12px}
+
+/* ── Column highlights ── */
+.pk-col{color:#0d9488!important;font-weight:700!important}
+.fk-col{color:#f59e0b!important;font-weight:600!important;font-style:italic}
+.bad-col{background:rgba(239,68,68,.1)!important;color:#ef4444!important;font-weight:600}
+
+/* ── Key & Warn Boxes ── */
+.nf-key-box{padding:12px 18px;background:rgba(13,148,136,.07);border:1px solid rgba(13,148,136,.15);border-radius:10px;margin-top:14px;font-size:14px;color:var(--text-primary);display:flex;align-items:center;gap:8px}
+.key-emoji{font-size:20px}
+.nf-warn-box{display:flex;gap:12px;padding:14px 18px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.18);border-radius:10px;margin-top:16px;font-size:13px;color:var(--text-secondary);line-height:1.6}
+.nf-warn-box ul{margin:6px 0 0 16px;padding:0}
+.nf-warn-box li{margin-bottom:4px}
+.warn-icon{font-size:22px;flex-shrink:0;margin-top:2px}
+.nf-success-box{display:flex;gap:12px;padding:14px 18px;background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.2);border-radius:10px;margin-top:16px;font-size:14px;color:#34d399;font-weight:600}
+.success-icon{font-size:22px;flex-shrink:0}
+
+/* ── Dependencies ── */
+.nf-dep-section{margin:16px 0}
+.dep-heading{font-size:16px;margin:0 0 10px;font-weight:700}
+.dep-heading.red{color:#ef4444}
+.dep-item-box{display:flex;flex-direction:column;gap:6px}
+.dep-row{padding:10px 14px;background:var(--surface-bg);border-radius:8px;display:flex;flex-direction:column;gap:3px}
+.dep-code{font-family:'JetBrains Mono',Consolas,monospace;font-size:13px;font-weight:700}
+.dep-code.red{color:#ef4444}
+.dep-note{font-size:11px;color:var(--text-muted)}
+.nf-solution{padding:10px 16px;background:rgba(16,185,129,.06);border-left:4px solid #10b981;border-radius:0 8px 8px 0;font-size:13px;color:var(--text-primary);margin:12px 0}
+
+/* ── Split Tables Grid ── */
+.split-tables{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:16px;margin:16px 0;overflow-x:auto}
+.split-tbl-card{border:1px solid var(--border);border-radius:12px;overflow:hidden;transition:transform .2s;min-width:0}
+.split-tbl-card:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,.08)}
+.split-tbl-card.highlight-new{border:2px solid #10b981;box-shadow:0 0 20px rgba(16,185,129,.12)}
+.split-tbl-name{padding:10px 16px;background:var(--panel-bg);font-weight:800;font-size:13px;color:var(--text-primary);display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border);white-space:nowrap}
+/* Ensure "before" tables that sit alone or need full width display properly */
+.split-tbl-card[style*="border: 2px solid #ef4444"]{grid-column:1/-1}
+/* 5NF three-column layout for the solution tables */
+.split-tables-3col{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin:16px 0;overflow-x:auto}
+@media(max-width:1100px){.split-tables-3col{grid-template-columns:1fr 1fr}}
+@media(max-width:800px){.split-tables-3col{grid-template-columns:1fr}}
+
+/* ── Before/After Labels ── */
+.before-after-label{font-size:15px;font-weight:800;margin:20px 0 10px;padding:8px 16px;border-radius:8px;display:inline-block}
+.before-after-label.bad-label{color:#ef4444;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2)}
+.before-after-label.good-label{color:#10b981;background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.2)}
+
+/* ── After Tables Row (BCNF/4NF/5NF decomposed tables) ── */
+.after-tables-row{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin:12px 0 20px;overflow-x:auto}
+.after-tables-row.three-col{grid-template-columns:repeat(3,1fr)}
+@media(max-width:1100px){.after-tables-row.three-col{grid-template-columns:1fr 1fr}}
+@media(max-width:800px){.after-tables-row,.after-tables-row.three-col{grid-template-columns:1fr}}
+.after-tbl-card{border:2px solid #10b981;border-radius:12px;overflow:hidden;box-shadow:0 0 16px rgba(16,185,129,.1);transition:transform .2s;min-width:0}
+.after-tbl-card:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(16,185,129,.15)}
+
+/* ── Badges ── */
+.tbl-badge{font-size:10px;padding:3px 10px;border-radius:12px;font-weight:700;letter-spacing:.3px}
+.tbl-badge.new{background:rgba(16,185,129,.15);color:#34d399}
+.tbl-badge.modified{background:rgba(245,158,11,.15);color:#fbbf24}
+.tbl-badge.ok{background:rgba(14,165,233,.12);color:#38bdf8}
+
+/* ── ER Diagram ── */
+.er-box{background:#0f172a;color:#5eead4;padding:24px;border-radius:12px;font-family:'JetBrains Mono','Fira Code',Consolas,monospace;font-size:11.5px;line-height:1.45;overflow-x:auto;white-space:pre;margin:0;border:1px solid rgba(94,234,212,.1)}
+
+/* ── Summary ── */
+.summary-title{font-size:16px;color:var(--text-primary);margin:24px 0 12px;font-weight:700}
+.step-cell{color:#0d9488;font-weight:700;white-space:nowrap}
+
+/* ── Final Tables List ── */
+.final-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px;margin-top:10px}
+.final-item{display:flex;align-items:center;gap:12px;padding:12px 16px;background:var(--surface-bg);border-radius:10px;border:1px solid var(--border);transition:all .2s}
+.final-item:hover{border-color:#0d9488;background:rgba(13,148,136,.04)}
+.final-item.new-item{border-color:rgba(16,185,129,.3);background:rgba(16,185,129,.04)}
+.fi-num{width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,#0d9488,#0f766e);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0}
+.new-item .fi-num{background:linear-gradient(135deg,#10b981,#059669)}
+.fi-name{font-weight:700;font-size:13px;color:var(--text-primary);font-family:'JetBrains Mono',Consolas,monospace}
+.fi-desc{font-size:11px;color:var(--text-muted);margin-left:auto}
+</style>
+{% endblock %}

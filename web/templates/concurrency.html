@@ -1,0 +1,525 @@
+{% extends 'base.html' %}
+{% block title %}Concurrency Control{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h1>🔐 Concurrency Control (Locking Mechanisms)</h1>
+    <p>How our Accident Alert System handles simultaneous database access using shared & exclusive locks</p>
+</div>
+
+<!-- Navigation Pills -->
+<div class="cc-nav">
+    <a href="#overview" class="cc-pill">Overview</a>
+    <span class="cc-arrow">→</span>
+    <a href="#shared-exclusive" class="cc-pill se-pill">Shared & Exclusive</a>
+    <span class="cc-arrow">→</span>
+    <a href="#table-lock" class="cc-pill tbl-pill">Table-Level</a>
+    <span class="cc-arrow">→</span>
+    <a href="#row-lock" class="cc-pill row-pill">Row-Level</a>
+    <span class="cc-arrow">→</span>
+    <a href="#deadlock" class="cc-pill dead-pill">Deadlocks</a>
+    <span class="cc-arrow">→</span>
+    <a href="#project-usage" class="cc-pill usage-pill">Where Used</a>
+</div>
+
+<!-- ═══════════ OVERVIEW ═══════════ -->
+<div class="cc-card" id="overview">
+    <div class="cc-card-header overview-hdr"><span class="cc-num">🔐</span> Why Concurrency Control?</div>
+    <div class="cc-card-body">
+        <div class="cc-rule-box overview-rule">
+            <strong>Problem:</strong> In our Accident Alert System, <strong>multiple dispatchers</strong> can be logged in simultaneously. Without concurrency control, two dispatchers could assign the <strong>same ambulance</strong> to different accidents — causing data corruption.
+        </div>
+
+        <div class="cc-desc">Locking mechanisms control <strong>concurrent access</strong> to data, preventing conflicts when multiple users or processes access the database at the same time. MySQL's InnoDB engine provides two levels of locking:</div>
+
+        <div class="lock-level-grid">
+            <div class="lock-level-card">
+                <div class="ll-icon">📋</div>
+                <div class="ll-name">Table-Level Locking</div>
+                <div class="ll-desc">Locks the <strong>entire table</strong>. Simple but blocks all other sessions. Used for bulk operations like fleet reset.</div>
+                <div class="ll-syntax"><code>LOCK TABLES ... READ/WRITE</code></div>
+            </div>
+            <div class="lock-level-card">
+                <div class="ll-icon">🔑</div>
+                <div class="ll-name">Row-Level Locking</div>
+                <div class="ll-desc">Locks only <strong>specific rows</strong>. Other rows remain accessible. Used for ambulance dispatch (lock one ambulance row).</div>
+                <div class="ll-syntax"><code>SELECT ... FOR UPDATE / LOCK IN SHARE MODE</code></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════ SHARED & EXCLUSIVE LOCKS ═══════════ -->
+<div class="cc-card" id="shared-exclusive">
+    <div class="cc-card-header se-hdr"><span class="cc-num">S/X</span> Shared & Exclusive Locks</div>
+    <div class="cc-card-body">
+        <div class="lock-overview">
+            <div class="lock-type-card">
+                <div class="lock-badge shared-badge">S</div>
+                <div class="lock-info">
+                    <div class="lock-name">Shared Lock (S-Lock)</div>
+                    <div class="lock-char">Multiple transactions can hold simultaneously</div>
+                    <div class="lock-use">Used for: <strong>READ</strong> operations</div>
+                    <div class="lock-sql"><code>SELECT ... LOCK IN SHARE MODE</code></div>
+                    <div class="lock-project">🚨 <strong>Our project:</strong> Reading hospital bed counts before deciding where to route an ambulance</div>
+                </div>
+            </div>
+            <div class="lock-type-card">
+                <div class="lock-badge exclusive-badge">X</div>
+                <div class="lock-info">
+                    <div class="lock-name">Exclusive Lock (X-Lock)</div>
+                    <div class="lock-char">Only ONE transaction can hold at a time</div>
+                    <div class="lock-use">Used for: <strong>WRITE</strong> operations (UPDATE/DELETE)</div>
+                    <div class="lock-sql"><code>SELECT ... FOR UPDATE</code></div>
+                    <div class="lock-project">🚨 <strong>Our project:</strong> Locking an ambulance row before dispatching to prevent double-assignment</div>
+                </div>
+            </div>
+        </div>
+
+        <h3 class="cc-section-title">Lock Compatibility Matrix</h3>
+        <div class="cc-table-wrap">
+            <table class="cc-tbl compat-tbl">
+                <thead><tr>
+                    <th>Requesting ↓ / Held →</th>
+                    <th class="shared-col">Shared (S)</th>
+                    <th class="excl-col">Exclusive (X)</th>
+                </tr></thead>
+                <tbody>
+                    <tr>
+                        <td class="shared-col"><strong>Shared (S)</strong></td>
+                        <td class="compat-yes">✅ Compatible — multiple readers allowed</td>
+                        <td class="compat-no">❌ Conflict — writer blocks readers</td>
+                    </tr>
+                    <tr>
+                        <td class="excl-col"><strong>Exclusive (X)</strong></td>
+                        <td class="compat-no">❌ Conflict — reader blocks writers</td>
+                        <td class="compat-no">❌ Conflict — only one writer at a time</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════ TABLE-LEVEL LOCKING ═══════════ -->
+<div class="cc-card" id="table-lock">
+    <div class="cc-card-header tbl-hdr"><span class="cc-num">📋</span> Table-Level Locking</div>
+    <div class="cc-card-body">
+        <div class="cc-rule-box tbl-rule">
+            <strong>Definition:</strong> Locks the <strong>entire table</strong>. No other session can access the locked table (for WRITE lock) or modify it (for READ lock). Used for bulk operations where row-level locking would be too granular.
+        </div>
+
+        <h3 class="cc-section-title">Table-Level READ Lock (Shared)</h3>
+        <div class="cc-desc">Multiple sessions can read simultaneously, but nobody can write until lock is released.</div>
+        <div class="sql-block">
+            <div class="sql-label">LOCK TABLES ... READ — Shared Table Lock</div>
+            <pre class="sql-code"><span class="cm">-- Session A: Lock hospitals table for reading</span>
+<span class="kw">LOCK TABLES</span> hospitals <span class="kw">READ;</span>
+
+<span class="cm">-- Session A CAN read:</span>
+<span class="kw">SELECT</span> * <span class="kw">FROM</span> hospitals;  <span class="cm">-- ✅ Allowed</span>
+
+<span class="cm">-- Session A CANNOT write:</span>
+<span class="kw">UPDATE</span> hospitals <span class="kw">SET</span> available_beds = 10 <span class="kw">WHERE</span> hospital_id = 1;
+<span class="cm">-- ❌ ERROR: Table 'hospitals' was locked with a READ lock</span>
+
+<span class="cm">-- Session B CAN also read (shared lock is compatible):</span>
+<span class="kw">SELECT</span> * <span class="kw">FROM</span> hospitals;  <span class="cm">-- ✅ Allowed</span>
+
+<span class="cm">-- Session B CANNOT write:</span>
+<span class="kw">UPDATE</span> hospitals <span class="kw">SET</span> available_beds = 5 <span class="kw">WHERE</span> hospital_id = 2;
+<span class="cm">-- ⏳ BLOCKED — waits until Session A releases lock</span>
+
+<span class="kw">UNLOCK TABLES;</span>  <span class="cm">-- Release the lock → Session B's UPDATE now proceeds</span></pre>
+        </div>
+
+        <h3 class="cc-section-title">Table-Level WRITE Lock (Exclusive)</h3>
+        <div class="cc-desc">Only the lock-holding session can read or write. All other sessions are blocked.</div>
+        <div class="sql-block">
+            <div class="sql-label fail-label">LOCK TABLES ... WRITE — Exclusive Table Lock</div>
+            <pre class="sql-code"><span class="cm">-- Session A: Lock ambulances table for writing</span>
+<span class="kw">LOCK TABLES</span> ambulances <span class="kw">WRITE;</span>
+
+<span class="cm">-- Session A CAN read and write:</span>
+<span class="kw">SELECT</span> * <span class="kw">FROM</span> ambulances;  <span class="cm">-- ✅ Allowed</span>
+<span class="kw">UPDATE</span> ambulances <span class="kw">SET</span> status = <span class="str">'green'</span>,
+       assigned_accident_id = <span class="kw">NULL</span>,
+       assigned_hospital_id = <span class="kw">NULL</span>;  <span class="cm">-- ✅ Allowed (bulk fleet reset)</span>
+
+<span class="cm">-- Session B CANNOT read OR write:</span>
+<span class="kw">SELECT</span> * <span class="kw">FROM</span> ambulances;
+<span class="cm">-- ⏳ BLOCKED — waits until WRITE lock is released</span>
+
+<span class="kw">UNLOCK TABLES;</span>  <span class="cm">-- All blocked sessions now proceed</span></pre>
+        </div>
+
+        <div class="cc-scenario-box">
+            <div class="scenario-icon">🚑</div>
+            <div>
+                <strong>In Our Project — Bulk Fleet Reset:</strong>
+                <div class="scenario-detail">When the admin clicks "Reset All Ambulances" on the Fleet page, we need to UPDATE all 12 ambulances to <code>status='green'</code> and clear all assignments. A TABLE-LEVEL WRITE LOCK ensures no dispatcher can read stale ambulance data during the reset.</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════ ROW-LEVEL LOCKING ═══════════ -->
+<div class="cc-card" id="row-lock">
+    <div class="cc-card-header row-hdr"><span class="cc-num">🔑</span> Row-Level Locking</div>
+    <div class="cc-card-body">
+        <div class="cc-rule-box row-rule">
+            <strong>Definition:</strong> Locks only the <strong>specific rows</strong> being accessed. Other rows in the same table remain fully available. Provided by InnoDB engine. Allows much higher concurrency than table-level locks.
+        </div>
+
+        <h3 class="cc-section-title">Row-Level Shared Lock — LOCK IN SHARE MODE</h3>
+        <div class="cc-desc">Allows this transaction to read the row. Other transactions CAN also read it (shared), but CANNOT update it until lock is released.</div>
+        <div class="sql-block">
+            <div class="sql-label">SELECT ... LOCK IN SHARE MODE — Check Hospital Beds</div>
+            <pre class="sql-code"><span class="kw">START TRANSACTION;</span>
+
+<span class="cm">-- Lock Apollo Hospital row with a SHARED lock</span>
+<span class="cm">-- Purpose: Read bed count to decide if this hospital can accept a patient</span>
+<span class="kw">SELECT</span> hospital_id, name, available_beds
+<span class="kw">FROM</span> hospitals
+<span class="kw">WHERE</span> hospital_id = 1
+<span class="kw">LOCK IN SHARE MODE;</span>
+<span class="cm">-- Result: hospital_id=1, Apollo Hospital, available_beds=15</span>
+
+<span class="cm">-- ✅ Other sessions CAN also SELECT ... LOCK IN SHARE MODE on this row</span>
+<span class="cm">-- ❌ Other sessions CANNOT UPDATE this row until we COMMIT/ROLLBACK</span>
+
+<span class="cm">-- Decision logic: if beds >= 1, route patient here</span>
+<span class="kw">SELECT</span> <span class="str">'Apollo Hospital has beds — routing ambulance here'</span> <span class="kw">AS</span> decision;
+
+<span class="kw">COMMIT;</span> <span class="cm">-- Shared lock released</span></pre>
+        </div>
+
+        <h3 class="cc-section-title">Row-Level Exclusive Lock — FOR UPDATE</h3>
+        <div class="cc-desc">Locks the row exclusively. No other transaction can read (with FOR UPDATE) or write to this row. Critical for preventing double-dispatch.</div>
+        <div class="sql-block">
+            <div class="sql-label fail-label">SELECT ... FOR UPDATE — Dispatch Ambulance Safely</div>
+            <pre class="sql-code"><span class="kw">START TRANSACTION;</span>
+
+<span class="cm">-- Lock ambulance #5 with an EXCLUSIVE lock before dispatching</span>
+<span class="kw">SELECT</span> ambulance_id, vehicle_number, status
+<span class="kw">FROM</span> ambulances
+<span class="kw">WHERE</span> ambulance_id = 5 <span class="kw">AND</span> status = <span class="str">'green'</span>
+<span class="kw">FOR UPDATE;</span>  <span class="cm">-- ← EXCLUSIVE lock on ambulance_id=5 ONLY</span>
+
+<span class="cm">-- ✅ Other sessions CAN still read/update ambulance_id=1,2,3,4,6,7...</span>
+<span class="cm">-- ❌ Other sessions CANNOT read (FOR UPDATE) or UPDATE ambulance_id=5</span>
+<span class="cm">-- If another dispatcher tries to dispatch #5, they WAIT here</span>
+
+<span class="cm">-- Safe to update — we have exclusive ownership:</span>
+<span class="kw">UPDATE</span> ambulances
+<span class="kw">SET</span> status = <span class="str">'red'</span>,
+    assigned_accident_id = 5,
+    assigned_hospital_id = 1
+<span class="kw">WHERE</span> ambulance_id = 5;
+
+<span class="kw">COMMIT;</span> <span class="cm">-- Exclusive lock released, other sessions unblocked</span></pre>
+        </div>
+
+        <!-- Timeline showing concurrent access -->
+        <h3 class="cc-section-title">Concurrent Dispatch — How Row Locking Prevents Double-Assignment</h3>
+        <div class="timeline-container">
+            <div class="timeline-col">
+                <div class="timeline-header session-a">Session A (Dispatcher in Chennai HQ)</div>
+                <div class="timeline-step">
+                    <span class="time-badge">T1</span>
+                    <code>START TRANSACTION;</code>
+                </div>
+                <div class="timeline-step">
+                    <span class="time-badge">T2</span>
+                    <code>SELECT * FROM ambulances WHERE ambulance_id=5 AND status='green' FOR UPDATE;</code>
+                    <span class="timeline-result ok">→ Row locked ✓ (Ambulance #5 is available)</span>
+                </div>
+                <div class="timeline-step">
+                    <span class="time-badge">T4</span>
+                    <code>UPDATE ambulances SET status='red', assigned_accident_id=10 WHERE ambulance_id=5;</code>
+                </div>
+                <div class="timeline-step">
+                    <span class="time-badge">T5</span>
+                    <code>COMMIT;</code>
+                    <span class="timeline-result ok">✓ Ambulance #5 dispatched successfully</span>
+                </div>
+            </div>
+            <div class="timeline-col">
+                <div class="timeline-header session-b">Session B (Dispatcher in Remote Office)</div>
+                <div class="timeline-step">
+                    <span class="time-badge">T1</span>
+                    <code>START TRANSACTION;</code>
+                </div>
+                <div class="timeline-step">
+                    <span class="time-badge">T3</span>
+                    <code>SELECT * FROM ambulances WHERE ambulance_id=5 AND status='green' FOR UPDATE;</code>
+                    <span class="timeline-result warn">⏳ BLOCKED — waiting for Session A's exclusive lock!</span>
+                </div>
+                <div class="timeline-step">
+                    <span class="time-badge">T6</span>
+                    <span class="timeline-result fail">→ Lock released. Row re-read: status='red'. 0 rows returned.</span>
+                </div>
+                <div class="timeline-step">
+                    <span class="time-badge">T7</span>
+                    <code>ROLLBACK;</code>
+                    <span class="timeline-result fail">✗ Ambulance #5 already dispatched. Pick another.</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="cc-success-box">
+            <div class="success-icon">✅</div>
+            <div><strong>Result:</strong> Row-level locking prevented both dispatchers from assigning ambulance #5. Session B was forced to wait, then saw the updated status and picked a different ambulance. No data corruption.</div>
+        </div>
+
+        <!-- Comparison Table -->
+        <h3 class="cc-section-title" style="margin-top:30px">📊 Table-Level vs Row-Level — Comparison</h3>
+        <div class="cc-table-wrap">
+            <table class="cc-tbl">
+                <thead><tr>
+                    <th>Feature</th>
+                    <th>Table-Level Lock</th>
+                    <th>Row-Level Lock</th>
+                </tr></thead>
+                <tbody>
+                    <tr><td><strong>Granularity</strong></td><td>Entire table</td><td>Individual rows</td></tr>
+                    <tr><td><strong>Concurrency</strong></td><td>Low — blocks all access</td><td>High — other rows accessible</td></tr>
+                    <tr><td><strong>Overhead</strong></td><td>Low (single lock)</td><td>Higher (many locks)</td></tr>
+                    <tr><td><strong>Syntax</strong></td><td><code>LOCK TABLES ... READ/WRITE</code></td><td><code>FOR UPDATE / LOCK IN SHARE MODE</code></td></tr>
+                    <tr><td><strong>Use Case</strong></td><td>Bulk data migration, backups</td><td>Single record updates, dispatching</td></tr>
+                    <tr><td><strong>Engine</strong></td><td>MyISAM & InnoDB</td><td>InnoDB only</td></tr>
+                    <tr><td><strong>In Our Project</strong></td><td>Bulk fleet status reset (admin)</td><td>Ambulance dispatch (lock 1 ambulance row)</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════ DEADLOCKS ═══════════ -->
+<div class="cc-card" id="deadlock">
+    <div class="cc-card-header dead-hdr"><span class="cc-num">💀</span> Deadlock Detection & Prevention</div>
+    <div class="cc-card-body">
+        <div class="cc-rule-box dead-rule">
+            <strong>Deadlock:</strong> Occurs when two transactions each hold a lock the other needs. Neither can proceed. MySQL's InnoDB automatically <strong>detects deadlocks</strong> and rolls back the "cheaper" transaction (the victim) to break the cycle.
+        </div>
+
+        <h3 class="cc-section-title">Deadlock Example in Our System</h3>
+        <div class="sql-block">
+            <div class="sql-label fail-label">Deadlock — Two Dispatchers Lock in Different Order</div>
+            <pre class="sql-code"><span class="cm">-- Session A (Dispatcher 1):               -- Session B (Dispatcher 2):</span>
+<span class="kw">START TRANSACTION;</span>                          <span class="kw">START TRANSACTION;</span>
+
+<span class="cm">-- A locks ambulance #1 first</span>               <span class="cm">-- B locks hospital #1 first</span>
+<span class="kw">UPDATE</span> ambulances <span class="kw">SET</span> status=<span class="str">'red'</span>         <span class="kw">UPDATE</span> hospitals <span class="kw">SET</span> available_beds=14
+  <span class="kw">WHERE</span> ambulance_id=1;                       <span class="kw">WHERE</span> hospital_id=1;
+<span class="cm">-- ✅ Locks amb#1</span>                           <span class="cm">-- ✅ Locks hosp#1</span>
+
+<span class="cm">-- A now needs hospital #1 (held by B)</span>     <span class="cm">-- B now needs ambulance #1 (held by A)</span>
+<span class="kw">UPDATE</span> hospitals <span class="kw">SET</span> available_beds=14     <span class="kw">UPDATE</span> ambulances <span class="kw">SET</span> status=<span class="str">'red'</span>
+  <span class="kw">WHERE</span> hospital_id=1;                        <span class="kw">WHERE</span> ambulance_id=1;
+<span class="cm">-- ⏳ WAITS for B's lock on hosp#1</span>         <span class="cm">-- ⏳ WAITS for A's lock on amb#1</span>
+
+<span class="cm">-- 💀 DEADLOCK DETECTED! MySQL rolls back one session.</span>
+<span class="cm">-- ERROR 1213: Deadlock found when trying to get lock;</span>
+<span class="cm">-- try restarting transaction</span></pre>
+        </div>
+
+        <h3 class="cc-section-title">Prevention — Consistent Lock Ordering</h3>
+        <div class="sql-block">
+            <div class="sql-label">Solution: Always Lock Tables in the SAME Order</div>
+            <pre class="sql-code"><span class="cm">-- Our project convention: accidents → ambulances → hospitals → audit_logs</span>
+<span class="cm">-- ALL dispatchers follow this order. No circular waits → No deadlocks.</span>
+
+<span class="kw">START TRANSACTION;</span>
+
+<span class="cm">-- Step 1: Lock accident row first</span>
+<span class="kw">SELECT</span> * <span class="kw">FROM</span> accidents <span class="kw">WHERE</span> accident_id = 5 <span class="kw">FOR UPDATE;</span>
+
+<span class="cm">-- Step 2: Then lock ambulance row</span>
+<span class="kw">SELECT</span> * <span class="kw">FROM</span> ambulances <span class="kw">WHERE</span> ambulance_id = 3 <span class="kw">FOR UPDATE;</span>
+
+<span class="cm">-- Step 3: Then lock hospital row</span>
+<span class="kw">SELECT</span> * <span class="kw">FROM</span> hospitals <span class="kw">WHERE</span> hospital_id = 1 <span class="kw">FOR UPDATE;</span>
+
+<span class="cm">-- Now safely update all three in locked order:</span>
+<span class="kw">UPDATE</span> ambulances <span class="kw">SET</span> status=<span class="str">'red'</span>, assigned_accident_id=5, assigned_hospital_id=1
+  <span class="kw">WHERE</span> ambulance_id=3;
+<span class="kw">UPDATE</span> hospitals <span class="kw">SET</span> available_beds = available_beds - 1 <span class="kw">WHERE</span> hospital_id=1;
+<span class="kw">INSERT INTO</span> audit_logs (user_id, action, details)
+  <span class="kw">VALUES</span> (1, <span class="str">'DISPATCH'</span>, <span class="str">'Amb #3 → Accident #5 → Apollo Hospital'</span>);
+
+<span class="kw">COMMIT;</span></pre>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════ WHERE USED IN OUR PROJECT ═══════════ -->
+<div class="cc-card" id="project-usage">
+    <div class="cc-card-header usage-hdr"><span class="cc-num">📍</span> Where Locking Is Used In Our Project</div>
+    <div class="cc-card-body">
+        <div class="usage-grid">
+            <div class="usage-card">
+                <div class="usage-hd"><span class="usage-icon">🚑</span> Ambulance Dispatch — Row-Level Exclusive</div>
+                <div class="usage-props"><span class="prop-tag excl">X-Lock</span><span class="prop-tag rl">Row-Level</span></div>
+                <div class="usage-detail">When a dispatcher clicks "Dispatch", the Flask backend runs <code>SELECT ... FOR UPDATE</code> on the target ambulance row. This acquires an exclusive row lock, preventing any other dispatcher from dispatching the same ambulance simultaneously. The lock is held until <code>conn.commit()</code>.</div>
+                <div class="usage-file">📁 web/app.py → <code>/api/dispatch</code> route</div>
+            </div>
+            <div class="usage-card">
+                <div class="usage-hd"><span class="usage-icon">🏥</span> Hospital Bed Check — Row-Level Shared</div>
+                <div class="usage-props"><span class="prop-tag shar">S-Lock</span><span class="prop-tag rl">Row-Level</span></div>
+                <div class="usage-detail">Before routing a patient, the system reads <code>hospitals.available_beds</code> with <code>LOCK IN SHARE MODE</code>. Multiple dispatchers can check beds simultaneously (shared lock), but no one can UPDATE the bed count until the check completes, preventing overbooking.</div>
+                <div class="usage-file">📁 web/app.py → <code>/api/hospitals</code> route</div>
+            </div>
+            <div class="usage-card">
+                <div class="usage-hd"><span class="usage-icon">🔄</span> Bulk Fleet Reset — Table-Level Write</div>
+                <div class="usage-props"><span class="prop-tag excl">X-Lock</span><span class="prop-tag tl">Table-Level</span></div>
+                <div class="usage-detail"><code>init_ambulance_fleet()</code> runs at server startup. It uses an implicit table-level write lock to reset all 12 ambulances to <code>status='green'</code> and assign valid Chennai coordinates. No dispatcher can access the fleet during this bulk operation.</div>
+                <div class="usage-file">📁 web/app.py → <code>init_ambulance_fleet()</code></div>
+            </div>
+            <div class="usage-card">
+                <div class="usage-hd"><span class="usage-icon">📊</span> Dashboard Stats — Table-Level Read</div>
+                <div class="usage-props"><span class="prop-tag shar">S-Lock</span><span class="prop-tag tl">Table-Level</span></div>
+                <div class="usage-detail">The dashboard polls <code>/api/stats</code> every 5 seconds. MySQL uses implicit shared locks during SELECT queries, allowing multiple dashboard sessions to read counts simultaneously without blocking each other.</div>
+                <div class="usage-file">📁 web/app.py → <code>/api/stats</code> route</div>
+            </div>
+            <div class="usage-card">
+                <div class="usage-hd"><span class="usage-icon">🗄️</span> Connection Pool — Isolation Between Requests</div>
+                <div class="usage-props"><span class="prop-tag rl">Row-Level</span><span class="prop-tag iso">Implicit</span></div>
+                <div class="usage-detail"><code>MySQLConnectionPool(pool_size=5, pool_reset_session=True)</code> ensures each Flask request gets a clean connection. When a connection returns to the pool, any held locks are automatically released, preventing lock leaks.</div>
+                <div class="usage-file">📁 web/app.py → <code>DB_CONFIG</code></div>
+            </div>
+            <div class="usage-card">
+                <div class="usage-hd"><span class="usage-icon">🔒</span> Deadlock Prevention — Lock Ordering</div>
+                <div class="usage-props"><span class="prop-tag excl">X-Lock</span><span class="prop-tag rl">Row-Level</span></div>
+                <div class="usage-detail">All dispatch transactions follow the same lock order: <strong>accidents → ambulances → hospitals → audit_logs</strong>. This consistent ordering eliminates circular waits and prevents deadlocks across concurrent dispatch requests.</div>
+                <div class="usage-file">📁 web/app.py → all dispatch-related routes</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* ── Navigation ── */
+.cc-nav{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:24px;position:sticky;top:60px;z-index:10;background:var(--bg);padding:12px 0}
+.cc-pill{padding:9px 18px;border-radius:25px;font-weight:700;font-size:13px;text-decoration:none;background:linear-gradient(135deg,#0ea5e9,#0284c7);color:#fff;transition:all .25s;box-shadow:0 2px 8px rgba(14,165,233,.25)}
+.cc-pill:hover{transform:translateY(-3px);box-shadow:0 6px 20px rgba(14,165,233,.35)}
+.cc-pill.se-pill{background:linear-gradient(135deg,#8b5cf6,#7c3aed)}
+.cc-pill.tbl-pill{background:linear-gradient(135deg,#f59e0b,#d97706)}
+.cc-pill.row-pill{background:linear-gradient(135deg,#10b981,#059669)}
+.cc-pill.dead-pill{background:linear-gradient(135deg,#ef4444,#dc2626)}
+.cc-pill.usage-pill{background:linear-gradient(135deg,#6366f1,#4f46e5)}
+.cc-arrow{color:var(--text-muted);font-size:18px;font-weight:800}
+
+/* ── Cards ── */
+.cc-card{margin-bottom:28px;border-radius:16px;overflow:hidden;border:1px solid var(--border);box-shadow:0 4px 24px rgba(0,0,0,.08)}
+.cc-card-header{padding:20px 28px;display:flex;align-items:center;gap:16px;font-size:22px;font-weight:800;color:#fff}
+.cc-card-header.overview-hdr{background:linear-gradient(135deg,#0ea5e9,#0284c7)}
+.cc-card-header.se-hdr{background:linear-gradient(135deg,#8b5cf6,#7c3aed)}
+.cc-card-header.tbl-hdr{background:linear-gradient(135deg,#f59e0b,#d97706)}
+.cc-card-header.row-hdr{background:linear-gradient(135deg,#10b981,#059669)}
+.cc-card-header.dead-hdr{background:linear-gradient(135deg,#ef4444,#dc2626)}
+.cc-card-header.usage-hdr{background:linear-gradient(135deg,#6366f1,#4f46e5)}
+.cc-num{width:48px;height:48px;border-radius:14px;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:900;flex-shrink:0;backdrop-filter:blur(4px)}
+.cc-card-body{padding:24px 28px;background:var(--card-bg)}
+.cc-desc{font-size:14px;color:var(--text-secondary);margin-bottom:16px;line-height:1.6}
+.cc-section-title{font-size:16px;color:var(--text-primary);margin:24px 0 12px;font-weight:700}
+
+/* ── Rule Box ── */
+.cc-rule-box{padding:14px 20px;border-radius:0 10px 10px 0;margin-bottom:20px;font-size:14px;color:var(--text-primary);line-height:1.6}
+.overview-rule{border-left:5px solid #0ea5e9;background:rgba(14,165,233,.06)}
+.tbl-rule{border-left:5px solid #f59e0b;background:rgba(245,158,11,.06)}
+.row-rule{border-left:5px solid #10b981;background:rgba(16,185,129,.06)}
+.dead-rule{border-left:5px solid #ef4444;background:rgba(239,68,68,.06)}
+
+/* ── Lock Level Grid ── */
+.lock-level-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:16px 0}
+.lock-level-card{padding:20px;border-radius:12px;border:1px solid var(--border);background:var(--surface-bg);text-align:center;transition:all .3s}
+.lock-level-card:hover{transform:translateY(-3px);box-shadow:0 6px 20px rgba(0,0,0,.08)}
+.ll-icon{font-size:32px;margin-bottom:8px}
+.ll-name{font-weight:800;font-size:16px;color:var(--text-primary);margin-bottom:6px}
+.ll-desc{font-size:12px;color:var(--text-muted);line-height:1.5;margin-bottom:8px}
+.ll-syntax code{background:rgba(14,165,233,.1);color:#38bdf8;padding:4px 10px;border-radius:6px;font-family:'JetBrains Mono',monospace;font-size:11px}
+
+/* ── Lock Overview ── */
+.lock-overview{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:16px 0}
+.lock-type-card{display:flex;gap:16px;padding:20px;border-radius:12px;border:1px solid var(--border);background:var(--surface-bg);align-items:flex-start}
+.lock-badge{width:54px;height:54px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:900;flex-shrink:0;color:#fff}
+.shared-badge{background:linear-gradient(135deg,#10b981,#059669)}
+.exclusive-badge{background:linear-gradient(135deg,#ef4444,#dc2626)}
+.lock-name{font-weight:800;font-size:15px;color:var(--text-primary);margin-bottom:4px}
+.lock-char{font-size:12px;color:var(--text-muted);margin-bottom:4px}
+.lock-use{font-size:12px;color:var(--text-secondary)}
+.lock-sql{margin-top:6px}.lock-sql code{background:rgba(14,165,233,.1);color:#38bdf8;padding:4px 8px;border-radius:6px;font-family:'JetBrains Mono',monospace;font-size:11px}
+.lock-project{margin-top:8px;font-size:11px;color:#f59e0b;font-weight:600;line-height:1.5}
+
+/* ── SQL Blocks ── */
+.sql-block{margin:16px 0;border-radius:12px;overflow:hidden;border:1px solid var(--border)}
+.sql-label{padding:10px 18px;background:linear-gradient(135deg,#10b981,#059669);font-weight:700;font-size:13px;color:#fff;letter-spacing:.3px}
+.sql-label.fail-label{background:linear-gradient(135deg,#ef4444,#dc2626)}
+.sql-code{background:#0f172a;color:#e2e8f0;padding:20px;margin:0;font-family:'JetBrains Mono','Fira Code',Consolas,monospace;font-size:12.5px;line-height:1.65;overflow-x:auto;white-space:pre}
+.sql-code .kw{color:#7dd3fc;font-weight:700}
+.sql-code .str{color:#86efac}
+.sql-code .cm{color:#64748b;font-style:italic}
+.sql-code .fn{color:#fbbf24}
+
+/* ── Tables ── */
+.cc-table-wrap{overflow-x:auto;margin:16px 0;border-radius:10px;border:1px solid var(--border)}
+.cc-tbl{width:100%;border-collapse:collapse;font-size:13px}
+.cc-tbl thead tr{background:linear-gradient(135deg,#0ea5e9,#0284c7)}
+.cc-tbl th{padding:12px 16px;text-align:left;font-weight:700;color:#fff;font-size:12px;letter-spacing:.3px}
+.cc-tbl td{padding:10px 16px;border-bottom:1px solid var(--border);color:var(--text-secondary)}
+.cc-tbl tbody tr:nth-child(even) td{background:rgba(14,165,233,.03)}
+.cc-tbl tbody tr:hover td{background:rgba(14,165,233,.08)}
+.cc-tbl td code{background:rgba(14,165,233,.08);color:var(--text-primary);padding:2px 6px;border-radius:4px;font-family:'JetBrains Mono',monospace;font-size:11px}
+.compat-tbl .shared-col{color:#10b981;font-weight:700}
+.compat-tbl .excl-col{color:#ef4444;font-weight:700}
+.compat-yes{color:#10b981;font-weight:700;background:rgba(16,185,129,.06)!important}
+.compat-no{color:#ef4444;font-weight:700;background:rgba(239,68,68,.04)!important}
+
+/* ── Scenario Box ── */
+.cc-scenario-box{display:flex;gap:16px;padding:18px 22px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.15);border-radius:12px;margin-top:20px}
+.scenario-icon{font-size:32px;flex-shrink:0}
+.scenario-detail{font-size:13px;color:var(--text-secondary);line-height:1.6;margin-top:6px}
+.scenario-detail code{background:rgba(245,158,11,.1);padding:2px 6px;border-radius:4px;font-family:'JetBrains Mono',monospace;font-size:11px}
+
+/* ── Timeline ── */
+.timeline-container{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:16px 0}
+.timeline-col{padding:16px;border-radius:10px;border:1px solid var(--border);background:var(--surface-bg)}
+.timeline-header{text-align:center;padding:10px;border-radius:8px;font-weight:800;font-size:14px;margin-bottom:12px;color:#fff}
+.timeline-header.session-a{background:linear-gradient(135deg,#6366f1,#4f46e5)}
+.timeline-header.session-b{background:linear-gradient(135deg,#f43f5e,#e11d48)}
+.timeline-step{padding:10px 12px;margin-bottom:8px;border-radius:8px;border:1px solid var(--border);font-size:11.5px}
+.timeline-step code{font-family:'JetBrains Mono',monospace;font-size:11px;color:#7dd3fc;display:block;margin-top:4px}
+.time-badge{display:inline-block;padding:2px 8px;border-radius:5px;background:rgba(99,102,241,.15);color:#818cf8;font-weight:800;font-size:10px;margin-right:6px}
+.timeline-result{display:block;margin-top:6px;font-weight:700;font-size:11px}
+.timeline-result.ok{color:#10b981}
+.timeline-result.warn{color:#f59e0b}
+.timeline-result.fail{color:#ef4444}
+
+/* ── Success Box ── */
+.cc-success-box{display:flex;gap:12px;padding:14px 18px;background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.2);border-radius:10px;margin-top:16px;font-size:14px;color:#34d399;font-weight:600;line-height:1.6}
+.success-icon{font-size:22px;flex-shrink:0}
+
+/* ── Usage Grid ── */
+.usage-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:14px}
+.usage-card{padding:18px;border-radius:12px;border:1px solid var(--border);background:var(--surface-bg);transition:all .3s}
+.usage-card:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,.08);border-color:rgba(99,102,241,.3)}
+.usage-hd{font-weight:800;font-size:15px;color:var(--text-primary);margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.usage-icon{font-size:20px}
+.usage-props{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.prop-tag{padding:3px 10px;border-radius:12px;font-size:10px;font-weight:700;letter-spacing:.3px}
+.prop-tag.excl{background:rgba(239,68,68,.12);color:#f87171}
+.prop-tag.shar{background:rgba(16,185,129,.12);color:#34d399}
+.prop-tag.rl{background:rgba(14,165,233,.12);color:#38bdf8}
+.prop-tag.tl{background:rgba(245,158,11,.12);color:#fbbf24}
+.prop-tag.iso{background:rgba(139,92,246,.12);color:#a78bfa}
+.usage-detail{font-size:12px;color:var(--text-muted);line-height:1.6;margin-bottom:8px}
+.usage-detail code{background:rgba(99,102,241,.08);color:var(--text-primary);padding:1px 5px;border-radius:4px;font-family:'JetBrains Mono',monospace;font-size:11px}
+.usage-file{font-size:11px;color:var(--text-dim);border-top:1px solid var(--border);padding-top:8px}
+.usage-file code{color:#818cf8;font-family:'JetBrains Mono',monospace}
+
+@media(max-width:768px){
+    .lock-overview,.lock-level-grid,.timeline-container,.usage-grid{grid-template-columns:1fr}
+    .cc-nav{gap:6px}.cc-pill{padding:7px 12px;font-size:11px}
+}
+</style>
+{% endblock %}

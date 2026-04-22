@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<!-- AI Control Panel -->
+<div class="ai-panel" id="ai-panel">
+    <div class="ai-indicator" id="ai-indicator">🔍</div>
+    <div class="ai-info">
+        <div class="ai-status" id="ai-status">AI Detection Idle</div>
+        <div class="ai-detail" id="ai-detail">Click START to begin scanning for accidents</div>
+    </div>
+    <select class="form-select" id="ai-interval" style="width:100px">
+        <option value="3">3 sec</option>
+        <option value="5" selected>5 sec</option>
+        <option value="10">10 sec</option>
+        <option value="15">15 sec</option>
+    </select>
+    <button class="btn btn-success" id="ai-toggle" onclick="toggleAI()">▶ START</button>
+</div>
+
+<!-- Page Header -->
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Dashboard</h1>
+        <p class="page-subtitle">Real-time emergency response overview</p>
+    </div>
+    <div class="header-actions">
+        <button class="btn btn-primary" onclick="showReportModal()">+ Report Accident</button>
+        <button class="btn btn-danger btn-sm" onclick="clearAllAccidents()">🗑 Clear All</button>
+        <button class="btn btn-ghost btn-sm" onclick="refreshDashboard()">↻ Refresh</button>
+    </div>
+</div>
+
+<!-- Stat Cards -->
+<div class="stats-grid" id="stats-grid">
+    <div class="stat-card red">
+        <div class="stat-icon">🚨</div>
+        <div class="stat-value" id="stat-accidents">—</div>
+        <div class="stat-label">Active Accidents</div>
+    </div>
+    <div class="stat-card green">
+        <div class="stat-icon">🚑</div>
+        <div class="stat-value" id="stat-ambulances">—</div>
+        <div class="stat-label">Ambulances Ready</div>
+    </div>
+    <div class="stat-card blue">
+        <div class="stat-icon">🏥</div>
+        <div class="stat-value" id="stat-beds">—</div>
+        <div class="stat-label">Available Beds</div>
+    </div>
+    <div class="stat-card yellow">
+        <div class="stat-icon">⚠️</div>
+        <div class="stat-value" id="stat-critical">—</div>
+        <div class="stat-label">Critical Cases</div>
+    </div>
+</div>
+
+<!-- Dashboard Grid: Map + Feed -->
+<div class="dashboard-grid">
+    <!-- Map -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">🗺️ Live Dispatch Map</h3>
+            <span style="font-size:12px;color:var(--text-muted)" id="map-stats">Loading...</span>
+        </div>
+        <div class="map-wrapper" id="map"></div>
+    </div>
+
+    <!-- Live Feed -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">📡 Live Accident Feed</h3>
+        </div>
+        <div class="feed-container" id="accident-feed">
+            <div class="empty-state">
+                <div class="icon">📡</div>
+                <h3>Listening...</h3>
+                <p>No accidents reported yet</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Report Accident Modal -->
+<div class="modal-overlay" id="report-modal">
+    <div class="modal">
+        <h2 class="modal-title">🚨 Report New Accident</h2>
+        <div class="form-group">
+            <label class="form-label">Location</label>
+            <input type="text" class="form-input" id="report-location" placeholder="e.g. T Nagar Main Road" required>
+        </div>
+        <div class="form-group">
+            <label class="form-label">Vehicle ID</label>
+            <input type="text" class="form-input" id="report-vehicle" placeholder="e.g. TN01AB1234">
+        </div>
+        <div class="form-group">
+            <label class="form-label">Severity</label>
+            <select class="form-select" id="report-severity">
+                <option value="Low">Low</option>
+                <option value="Medium" selected>Medium</option>
+                <option value="High">High</option>
+                <option value="Critical">Critical</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label class="form-label">Description</label>
+            <textarea class="form-input" id="report-desc" placeholder="Brief description of the accident"></textarea>
+        </div>
+        <div class="modal-actions">
+            <button class="btn btn-ghost" onclick="closeModal('report-modal')">Cancel</button>
+            <button class="btn btn-danger" onclick="submitAccidentReport()">Report Accident</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+{% endblock %}
