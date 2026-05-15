@@ -6,7 +6,7 @@ Built this as a college project  but went way beyond the requirements - added re
 
 ## How it works
 
-1. An accident is reported with location, severity, and vehicle details
+1. An accident is reported with location, severity, and vehicle deatils
 2. The system queries the database for the nearest hospital with available beds
 3. It finds the closest available ambulance and calculates the route
 4. The dispatcher gets a notification with all the details
